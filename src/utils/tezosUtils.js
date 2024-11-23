@@ -13,6 +13,7 @@ const detectContractVersion = (entrypoints) => {
     'add_parent',
     'remove_child',
     'remove_parent',
+    'set_pause',
   ];
 
   // Extract all entrypoint names and convert to lowercase for case-insensitive comparison
@@ -55,13 +56,10 @@ export const validateContract = async (contractAddress, tokenId, walletAddress) 
     }
 
     // Decode metadataURI from hex string to UTF-8 string
-    if (typeof metadataURI === 'string') {
-      // Check if it's a hex string
-      if (/^[0-9a-fA-F]+$/.test(metadataURI)) {
-        metadataURI = Buffer.from(metadataURI, 'hex').toString('utf8');
-      }
-    } else if (metadataURI.bytes) {
+    if (metadataURI.bytes) {
       metadataURI = Buffer.from(metadataURI.bytes, 'hex').toString('utf8');
+    } else if (typeof metadataURI === 'string') {
+      metadataURI = Buffer.from(metadataURI, 'hex').toString('utf8');
     } else {
       console.error('Metadata URI has an unexpected type.');
       return false;
@@ -84,13 +82,10 @@ export const validateContract = async (contractAddress, tokenId, walletAddress) 
     }
 
     // Decode metadataContent from hex string to UTF-8 string
-    if (typeof metadataContent === 'string') {
-      // Check if it's a hex string
-      if (/^[0-9a-fA-F]+$/.test(metadataContent)) {
-        metadataContent = Buffer.from(metadataContent, 'hex').toString('utf8');
-      }
-    } else if (metadataContent.bytes) {
+    if (metadataContent.bytes) {
       metadataContent = Buffer.from(metadataContent.bytes, 'hex').toString('utf8');
+    } else if (typeof metadataContent === 'string') {
+      metadataContent = Buffer.from(metadataContent, 'hex').toString('utf8');
     } else {
       console.error('Metadata content has an unexpected type.');
       return false;

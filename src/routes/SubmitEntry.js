@@ -55,7 +55,7 @@ const SubmitEntry = () => {
       const isValid = await validateContract(contractAddress, tokenId, walletAddress);
 
       if (!isValid) {
-        setMessage({ type: 'error', text: 'Invalid contract or token ID.' });
+        setMessage({ type: 'error', text: 'Invalid ZeroContract or you do not own the token.' });
         setLoading(false);
         return;
       }
@@ -80,7 +80,8 @@ const SubmitEntry = () => {
         Submit Your Entry
       </Typography>
       <Typography variant="body1" gutterBottom>
-        Welcome to the 9th Save The World With Art™ Art Prize! To participate, please mint your 1/1 on-chain art using our platform{' '}
+        Welcome to the 9th Save The World With Art™ Art Prize! To participate, please mint your 1/1
+        on-chain art using our platform{' '}
         <a href="https://savetheworldwithart.io" target="_blank" rel="noopener noreferrer">
           savetheworldwithart.io
         </a>

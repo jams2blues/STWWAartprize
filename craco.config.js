@@ -33,16 +33,19 @@ module.exports = {
         }),
       ];
 
-      // Ensure '.js' extension is resolved
-      webpackConfig.resolve.extensions = [
-        ...webpackConfig.resolve.extensions,
-        '.js',
-      ];
-
-      // Suppress specific source map warnings
+      // Suppress source map warnings for specific modules
       webpackConfig.ignoreWarnings = [
+        ...(webpackConfig.ignoreWarnings || []),
         {
-          module: /@airgap\/beacon-core/,
+          module: /node_modules\/@airgap\/beacon-types/,
+          message: /Failed to parse source map/,
+        },
+        {
+          module: /node_modules\/@airgap\/beacon-utils/,
+          message: /Failed to parse source map/,
+        },
+        {
+          module: /node_modules\/@walletconnect\//,
           message: /Failed to parse source map/,
         },
       ];

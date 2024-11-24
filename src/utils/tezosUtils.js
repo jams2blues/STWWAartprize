@@ -90,9 +90,6 @@ export const validateContract = async (contractAddress, tokenId, walletAddress) 
       return false;
     }
 
-    // Parse the JSON metadata
-    const contractMetadata = JSON.parse(metadataContent);
-
     // Optionally, perform additional checks on the metadata
 
     // Step 4: Fetch token data to ensure the token exists

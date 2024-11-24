@@ -15,7 +15,7 @@ import { query } from 'thin-backend';
 import { useQuery } from 'thin-backend-react';
 import { recordVote } from '../utils/thinBackendUtils';
 import { WalletContext } from '../contexts/WalletContext';
-import ReCAPTCHA from 'react-google-recaptcha';
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import Countdown from 'react-countdown';
 
 const VotingGallery = () => {
@@ -23,7 +23,7 @@ const VotingGallery = () => {
   const entries = useQuery(query('entries').orderByDesc('votes'));
   const [message, setMessage] = useState({ type: '', text: '' });
   const [voted, setVoted] = useState(false);
-  const [captchaValue, setCaptchaValue] = useState(null);
+  const { executeRecaptcha } = useGoogleReCaptcha();
 
   useEffect(() => {
     const checkIfVoted = async () => {
@@ -38,22 +38,25 @@ const VotingGallery = () => {
   }, [walletAddress]);
 
   const handleVote = async (entryId) => {
-    if (!captchaValue) {
-      setMessage({ type: 'error', text: 'Please complete the CAPTCHA.' });
+    if (!executeRecaptcha) {
+      setMessage({ type: 'error', text: 'reCAPTCHA not yet available.' });
       return;
     }
 
     try {
-      // Verify CAPTCHA
+      // Execute reCAPTCHA with action 'vote'
+      const token = await executeRecaptcha('vote');
+
+      // Send token to backend for verification
       const captchaResponse = await fetch('/api/verifyCaptcha', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ captchaValue }),
+        body: JSON.stringify({ token, action: 'vote' }),
       });
       const captchaResult = await captchaResponse.json();
 
-      if (!captchaResult.success) {
-        setMessage({ type: 'error', text: 'CAPTCHA verification failed.' });
+      if (!captchaResult.success || captchaResult.action !== 'vote' || captchaResult.score < 0.5) {
+        setMessage({ type: 'error', text: 'CAPTCHA verification failed. Please try again.' });
         return;
       }
 
@@ -68,13 +71,13 @@ const VotingGallery = () => {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4 }}>
+    <Container maxWidth="lg" sx={{ mt: 4, bgcolor: '#000000', color: '#FFFFFF', minHeight: '100vh', padding: 4 }}>
       <CountdownTimer />
       <Typography variant="h4" gutterBottom>
         Voting Gallery
       </Typography>
       {message.text && (
-        <Alert severity={message.type} sx={{ mb: 2 }}>
+        <Alert severity={message.type} sx={{ mb: 2, bgcolor: message.type === 'error' ? '#FF4C4C' : '#4CAF50', color: '#FFFFFF' }}>
           {message.text}
         </Alert>
       )}
@@ -83,14 +86,10 @@ const VotingGallery = () => {
           Connect Wallet to Vote
         </Button>
       )}
-      <ReCAPTCHA
-        sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}
-        onChange={(value) => setCaptchaValue(value)}
-      />
       <Grid container spacing={2} sx={{ mt: 2 }}>
         {entries.map((entry) => (
           <Grid item xs={12} sm={6} md={4} key={entry.id}>
-            <Card>
+            <Card sx={{ bgcolor: '#1a1a1a' }}>
               <CardMedia
                 component="img"
                 height="200"

@@ -4,7 +4,11 @@ const webpack = require('webpack');
 
 module.exports = {
   webpack: {
-    configure: (webpackConfig) => {
+    configure: (webpackConfig, { env, paths }) => {
+      if (env === 'production') {
+        webpackConfig.devtool = false; // Disable source maps
+      }
+
       // Fallbacks for Node.js core modules
       webpackConfig.resolve.fallback = {
         ...webpackConfig.resolve.fallback,
@@ -16,7 +20,6 @@ module.exports = {
         url: require.resolve('url'),
         util: require.resolve('util'),
         os: require.resolve('os-browserify/browser'),
-        // Use 'process/browser.js' instead of 'process/browser'
         process: require.resolve('process/browser.js'),
       };
 

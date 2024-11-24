@@ -14,7 +14,7 @@ import { WalletContext } from '../contexts/WalletContext';
 import { validateContract } from '../utils/tezosUtils';
 import { submitEntry } from '../utils/thinBackendUtils';
 import { useNavigate } from 'react-router-dom';
-import ReCAPTCHA from 'react-google-recaptcha';
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import Countdown from 'react-countdown';
 
 const SubmitEntry = () => {
@@ -23,30 +23,33 @@ const SubmitEntry = () => {
   const [tokenId, setTokenId] = useState('');
   const [message, setMessage] = useState({ type: '', text: '' });
   const [loading, setLoading] = useState(false);
-  const [captchaValue, setCaptchaValue] = useState(null);
   const navigate = useNavigate();
+  const { executeRecaptcha } = useGoogleReCaptcha();
 
   const handleSubmit = async () => {
     setLoading(true);
     setMessage({ type: '', text: '' });
 
-    if (!captchaValue) {
-      setMessage({ type: 'error', text: 'Please complete the CAPTCHA.' });
+    if (!executeRecaptcha) {
+      setMessage({ type: 'error', text: 'reCAPTCHA not yet available.' });
       setLoading(false);
       return;
     }
 
     try {
-      // Verify CAPTCHA
+      // Execute reCAPTCHA with action 'submit_entry'
+      const token = await executeRecaptcha('submit_entry');
+
+      // Send token to backend for verification
       const captchaResponse = await fetch('/api/verifyCaptcha', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ captchaValue }),
+        body: JSON.stringify({ token, action: 'submit_entry' }),
       });
       const captchaResult = await captchaResponse.json();
 
-      if (!captchaResult.success) {
-        setMessage({ type: 'error', text: 'CAPTCHA verification failed.' });
+      if (!captchaResult.success || captchaResult.action !== 'submit_entry' || captchaResult.score < 0.5) {
+        setMessage({ type: 'error', text: 'CAPTCHA verification failed. Please try again.' });
         setLoading(false);
         return;
       }
@@ -74,7 +77,7 @@ const SubmitEntry = () => {
   };
 
   return (
-    <Container maxWidth="md" sx={{ mt: 4 }}>
+    <Container maxWidth="md" sx={{ mt: 4, bgcolor: '#000000', color: '#FFFFFF', minHeight: '100vh', padding: 4 }}>
       <CountdownTimer />
       <Typography variant="h4" gutterBottom>
         Submit Your Entry
@@ -82,7 +85,7 @@ const SubmitEntry = () => {
       <Typography variant="body1" gutterBottom>
         Welcome to the 9th Save The World With Art™ Art Prize! To participate, please mint your 1/1
         on-chain art using our platform{' '}
-        <a href="https://savetheworldwithart.io" target="_blank" rel="noopener noreferrer">
+        <a href="https://savetheworldwithart.io" target="_blank" rel="noopener noreferrer" style={{ color: '#1E90FF' }}>
           savetheworldwithart.io
         </a>
         . Then, submit your ZeroContract address and Token ID below.
@@ -104,21 +107,17 @@ const SubmitEntry = () => {
           label="ZeroContract Address"
           value={contractAddress}
           onChange={(e) => setContractAddress(e.target.value)}
-          sx={{ mb: 2 }}
+          sx={{ mb: 2, input: { color: '#FFFFFF' }, label: { color: '#FFFFFF' } }}
         />
         <TextField
           fullWidth
           label="Token ID"
           value={tokenId}
           onChange={(e) => setTokenId(e.target.value)}
-          sx={{ mb: 2 }}
-        />
-        <ReCAPTCHA
-          sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}
-          onChange={(value) => setCaptchaValue(value)}
+          sx={{ mb: 2, input: { color: '#FFFFFF' }, label: { color: '#FFFFFF' } }}
         />
         {message.text && (
-          <Alert severity={message.type} sx={{ mt: 2 }}>
+          <Alert severity={message.type} sx={{ mt: 2, bgcolor: message.type === 'error' ? '#FF4C4C' : '#4CAF50', color: '#FFFFFF' }}>
             {message.text}
           </Alert>
         )}

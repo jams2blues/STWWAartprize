@@ -15,11 +15,11 @@ export const WalletProvider = ({ children }) => {
   const connectWallet = async () => {
     try {
       const options = { name: 'STWWA Art Prize' };
-      const wallet = new BeaconWallet(options);
-      Tezos.setWalletProvider(wallet);
-      await wallet.requestPermissions({ network: { type: 'mainnet' } });
-      const address = await wallet.getPKH();
-      setWallet(wallet);
+      const beaconWallet = new BeaconWallet(options);
+      Tezos.setWalletProvider(beaconWallet);
+      await beaconWallet.requestPermissions({ network: { type: 'mainnet' } });
+      const address = await beaconWallet.getPKH();
+      setWallet(beaconWallet);
       setWalletAddress(address);
     } catch (error) {
       console.error('Wallet connection error:', error);

@@ -94,8 +94,7 @@ export const validateContract = async (contractAddress, tokenId, walletAddress) 
     // Parse the JSON metadata
     const contractMetadata = JSON.parse(metadataContent);
 
-    // Optionally, you can perform additional checks on the metadata
-    // For example, check if certain fields exist or match expected values
+    // Optionally, perform additional checks on the metadata
 
     // Step 4: Fetch token data to ensure the token exists
     const tokenResponse = await axios.get(

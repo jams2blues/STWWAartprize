@@ -48,7 +48,11 @@ const SubmitEntry = () => {
       });
       const captchaResult = await captchaResponse.json();
 
-      if (!captchaResult.success || captchaResult.action !== 'submit_entry' || captchaResult.score < 0.5) {
+      if (
+        !captchaResult.success ||
+        captchaResult.action !== 'submit_entry' ||
+        captchaResult.score < 0.5
+      ) {
         setMessage({ type: 'error', text: 'CAPTCHA verification failed. Please try again.' });
         setLoading(false);
         return;
@@ -77,7 +81,17 @@ const SubmitEntry = () => {
   };
 
   return (
-    <Container maxWidth="md" sx={{ mt: 4, bgcolor: '#000000', color: '#FFFFFF', minHeight: '100vh', padding: 4 }}>
+    <Container
+      maxWidth="md"
+      sx={{
+        mt: 4,
+        bgcolor: '#000000',
+        color: '#FFFFFF',
+        minHeight: '100vh',
+        padding: 4,
+        borderRadius: 2,
+      }}
+    >
       <CountdownTimer />
       <Typography variant="h4" gutterBottom>
         Submit Your Entry
@@ -85,7 +99,12 @@ const SubmitEntry = () => {
       <Typography variant="body1" gutterBottom>
         Welcome to the 9th Save The World With Art™ Art Prize! To participate, please mint your 1/1
         on-chain art using our platform{' '}
-        <a href="https://savetheworldwithart.io" target="_blank" rel="noopener noreferrer" style={{ color: '#1E90FF' }}>
+        <a
+          href="https://savetheworldwithart.io"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: '#1E90FF' }}
+        >
           savetheworldwithart.io
         </a>
         . Then, submit your ZeroContract address and Token ID below.
@@ -107,17 +126,54 @@ const SubmitEntry = () => {
           label="ZeroContract Address"
           value={contractAddress}
           onChange={(e) => setContractAddress(e.target.value)}
-          sx={{ mb: 2, input: { color: '#FFFFFF' }, label: { color: '#FFFFFF' } }}
+          sx={{
+            mb: 2,
+            input: { color: '#FFFFFF' },
+            label: { color: '#FFFFFF' },
+            '& .MuiOutlinedInput-root': {
+              '& fieldset': {
+                borderColor: '#FFFFFF',
+              },
+              '&:hover fieldset': {
+                borderColor: '#1E90FF',
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: '#1E90FF',
+              },
+            },
+          }}
         />
         <TextField
           fullWidth
           label="Token ID"
           value={tokenId}
           onChange={(e) => setTokenId(e.target.value)}
-          sx={{ mb: 2, input: { color: '#FFFFFF' }, label: { color: '#FFFFFF' } }}
+          sx={{
+            mb: 2,
+            input: { color: '#FFFFFF' },
+            label: { color: '#FFFFFF' },
+            '& .MuiOutlinedInput-root': {
+              '& fieldset': {
+                borderColor: '#FFFFFF',
+              },
+              '&:hover fieldset': {
+                borderColor: '#1E90FF',
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: '#1E90FF',
+              },
+            },
+          }}
         />
         {message.text && (
-          <Alert severity={message.type} sx={{ mt: 2, bgcolor: message.type === 'error' ? '#FF4C4C' : '#4CAF50', color: '#FFFFFF' }}>
+          <Alert
+            severity={message.type}
+            sx={{
+              mt: 2,
+              bgcolor: message.type === 'error' ? '#FF4C4C' : '#4CAF50',
+              color: '#FFFFFF',
+            }}
+          >
             {message.text}
           </Alert>
         )}

@@ -4,20 +4,28 @@ import { createTheme } from '@mui/material/styles';
 
 const theme = createTheme({
   palette: {
-    mode: 'dark',
+    mode: 'dark', // Enables dark mode
     primary: {
-      main: '#ffffff',
+      main: '#1E90FF', // Dodger Blue
     },
     secondary: {
-      main: '#FF0000',
+      main: '#FF4C4C', // Red
     },
     background: {
-      default: '#121212',
-      paper: '#1E1E1E',
+      default: '#000000', // Black background
+      paper: '#1a1a1a', // Dark gray for paper components
     },
     text: {
-      primary: '#ffffff',
-      secondary: '#ffffff',
+      primary: '#FFFFFF', // White text
+      secondary: '#FFFFFF', // White secondary text
+    },
+  },
+  typography: {
+    allVariants: {
+      color: '#FFFFFF',
+    },
+    button: {
+      textTransform: 'none', // Keeps button text as-is
     },
   },
 });

@@ -5,8 +5,9 @@ const webpack = require('webpack');
 module.exports = {
   webpack: {
     configure: (webpackConfig, { env, paths }) => {
+      // Disable source maps in production to eliminate source map errors
       if (env === 'production') {
-        webpackConfig.devtool = false; // Disable source maps
+        webpackConfig.devtool = false;
       }
 
       // Fallbacks for Node.js core modules
@@ -32,7 +33,7 @@ module.exports = {
         }),
       ];
 
-      // Ensure '.js' extension is resolved
+      // Ensure '.js' extension is resolved to prevent module resolution issues
       webpackConfig.resolve.extensions = [
         ...webpackConfig.resolve.extensions,
         '.js',

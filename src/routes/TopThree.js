@@ -26,7 +26,17 @@ const TopThree = () => {
   }, []);
 
   return (
-    <Container maxWidth="md" sx={{ mt: 4 }}>
+    <Container
+      maxWidth="md"
+      sx={{
+        mt: 4,
+        bgcolor: '#000000',
+        color: '#FFFFFF',
+        minHeight: '100vh',
+        padding: 4,
+        borderRadius: 2,
+      }}
+    >
       <CountdownTimer />
       <Typography variant="h4" gutterBottom>
         Top 3 Artworks
@@ -50,12 +60,13 @@ const TopThree = () => {
           }
           return (
             <Grid item xs={12} key={entry.id}>
-              <Card sx={{ border: `2px solid ${color}` }}>
+              <Card sx={{ border: `2px solid ${color}`, borderRadius: 2, bgcolor: '#1a1a1a' }}>
                 <CardMedia
                   component="img"
                   height="300"
                   image={`https://images.tzkt.io/${entry.contractAddress}/${entry.tokenId}`}
                   alt={entry.contractAddress}
+                  sx={{ objectFit: 'cover' }}
                 />
                 <CardContent>
                   <Typography variant="h5" sx={{ color }}>
@@ -65,11 +76,9 @@ const TopThree = () => {
                   <Typography variant="body2">Votes: {entry.votes}</Typography>
                   {competitionEnded && (
                     <Typography variant="body1" sx={{ mt: 2 }}>
-                      Congratulations! You will receive ${
-                        place === 1 ? '1000' : place === 2 ? '500' : '100'
-                      } in Tezos and a ${
-                        place === 1 ? 'Gold' : place === 2 ? 'Silver' : 'Bronze'
-                      } On-Chain Certificate.
+                      Congratulations! You will receive $
+                      {place === 1 ? '1000' : place === 2 ? '500' : '100'} in Tezos and a{' '}
+                      {place === 1 ? 'Gold' : place === 2 ? 'Silver' : 'Bronze'} On-Chain Certificate.
                     </Typography>
                   )}
                 </CardContent>

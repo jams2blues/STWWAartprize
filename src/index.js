@@ -1,7 +1,7 @@
 // src/index.js
 
 import React from 'react';
-import ReactDOM from 'react-dom';
+import ReactDOM from 'react-dom/client';
 import App from './App';
 import theme from './theme';
 import { ThemeProvider } from '@mui/material/styles';
@@ -12,14 +12,21 @@ import { ThinBackend } from 'thin-backend-react';
 import './index.css'; // Include default styles
 import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
+import { Buffer } from 'buffer';
+import process from 'process';
 
 // Initialize Thin Backend
 initThinBackend({ host: process.env.REACT_APP_BACKEND_URL });
 
-ReactDOM.render(
+// Make Buffer and process available globally
+window.Buffer = Buffer;
+window.process = process;
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
   <React.StrictMode>
     <ThemeProvider theme={theme}>
-      <GoogleReCaptchaProvider reCaptchaKey={process.env.REACT_APP_RECAPTCHA_SITE_KEY} scriptProps={{ async: true, defer: true }}>
+      <GoogleReCaptchaProvider reCaptchaKey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}>
         <WalletProvider>
           <ThinBackend>
             <Router>
@@ -29,9 +36,8 @@ ReactDOM.render(
         </WalletProvider>
       </GoogleReCaptchaProvider>
     </ThemeProvider>
-  </React.StrictMode>,
-  document.getElementById('root')
+  </React.StrictMode>
 );
 
-// Register the service worker
+// Register the service worker for PWA
 serviceWorkerRegistration.register();

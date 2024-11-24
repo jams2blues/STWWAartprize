@@ -55,7 +55,11 @@ const VotingGallery = () => {
       });
       const captchaResult = await captchaResponse.json();
 
-      if (!captchaResult.success || captchaResult.action !== 'vote' || captchaResult.score < 0.5) {
+      if (
+        !captchaResult.success ||
+        captchaResult.action !== 'vote' ||
+        captchaResult.score < 0.5
+      ) {
         setMessage({ type: 'error', text: 'CAPTCHA verification failed. Please try again.' });
         return;
       }
@@ -71,13 +75,30 @@ const VotingGallery = () => {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, bgcolor: '#000000', color: '#FFFFFF', minHeight: '100vh', padding: 4 }}>
+    <Container
+      maxWidth="lg"
+      sx={{
+        mt: 4,
+        bgcolor: '#000000',
+        color: '#FFFFFF',
+        minHeight: '100vh',
+        padding: 4,
+        borderRadius: 2,
+      }}
+    >
       <CountdownTimer />
       <Typography variant="h4" gutterBottom>
         Voting Gallery
       </Typography>
       {message.text && (
-        <Alert severity={message.type} sx={{ mb: 2, bgcolor: message.type === 'error' ? '#FF4C4C' : '#4CAF50', color: '#FFFFFF' }}>
+        <Alert
+          severity={message.type}
+          sx={{
+            mb: 2,
+            bgcolor: message.type === 'error' ? '#FF4C4C' : '#4CAF50',
+            color: '#FFFFFF',
+          }}
+        >
           {message.text}
         </Alert>
       )}
@@ -89,12 +110,13 @@ const VotingGallery = () => {
       <Grid container spacing={2} sx={{ mt: 2 }}>
         {entries.map((entry) => (
           <Grid item xs={12} sm={6} md={4} key={entry.id}>
-            <Card sx={{ bgcolor: '#1a1a1a' }}>
+            <Card sx={{ bgcolor: '#1a1a1a', borderRadius: 2 }}>
               <CardMedia
                 component="img"
                 height="200"
                 image={`https://images.tzkt.io/${entry.contractAddress}/${entry.tokenId}`}
                 alt={entry.contractAddress}
+                sx={{ objectFit: 'cover' }}
               />
               <CardContent>
                 <Typography variant="h6">Artist: {entry.walletAddress}</Typography>

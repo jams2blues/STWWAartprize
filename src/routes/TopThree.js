@@ -8,13 +8,15 @@ import {
   Card,
   CardMedia,
   CardContent,
+  Alert,
+  CircularProgress,
 } from '@mui/material';
 import { query } from 'thin-backend';
 import { useQuery } from 'thin-backend-react';
 import Countdown from 'react-countdown';
 
 const TopThree = () => {
-  const entries = useQuery(query('entries').orderByDesc('votes').limit(3));
+  const { data: entries, error, loading } = useQuery(query('entries').orderByDesc('votes').limit(3));
   const [competitionEnded, setCompetitionEnded] = useState(false);
 
   useEffect(() => {
@@ -24,6 +26,43 @@ const TopThree = () => {
       setCompetitionEnded(true);
     }
   }, []);
+
+  if (loading) {
+    return (
+      <Container
+        maxWidth="md"
+        sx={{
+          mt: 4,
+          bgcolor: '#000000',
+          color: '#FFFFFF',
+          minHeight: '100vh',
+          padding: 4,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        <CircularProgress color="secondary" />
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container
+        maxWidth="md"
+        sx={{
+          mt: 4,
+          bgcolor: '#000000',
+          color: '#FFFFFF',
+          minHeight: '100vh',
+          padding: 4,
+        }}
+      >
+        <Alert severity="error">Failed to load top entries. Please try again later.</Alert>
+      </Container>
+    );
+  }
 
   return (
     <Container
@@ -42,50 +81,54 @@ const TopThree = () => {
         Top 3 Artworks
       </Typography>
       <Grid container spacing={2} sx={{ mt: 2 }}>
-        {entries.map((entry, index) => {
-          const place = index + 1;
-          let color;
-          switch (place) {
-            case 1:
-              color = '#FFD700'; // Gold
-              break;
-            case 2:
-              color = '#C0C0C0'; // Silver
-              break;
-            case 3:
-              color = '#CD7F32'; // Bronze
-              break;
-            default:
-              color = '#FFFFFF';
-          }
-          return (
-            <Grid item xs={12} key={entry.id}>
-              <Card sx={{ border: `2px solid ${color}`, borderRadius: 2, bgcolor: '#1a1a1a' }}>
-                <CardMedia
-                  component="img"
-                  height="300"
-                  image={`https://images.tzkt.io/${entry.contractAddress}/${entry.tokenId}`}
-                  alt={entry.contractAddress}
-                  sx={{ objectFit: 'cover' }}
-                />
-                <CardContent>
-                  <Typography variant="h5" sx={{ color }}>
-                    {place === 1 ? '1st Place' : place === 2 ? '2nd Place' : '3rd Place'}
-                  </Typography>
-                  <Typography variant="h6">Artist: {entry.walletAddress}</Typography>
-                  <Typography variant="body2">Votes: {entry.votes}</Typography>
-                  {competitionEnded && (
-                    <Typography variant="body1" sx={{ mt: 2 }}>
-                      Congratulations! You will receive $
-                      {place === 1 ? '1000' : place === 2 ? '500' : '100'} in Tezos and a{' '}
-                      {place === 1 ? 'Gold' : place === 2 ? 'Silver' : 'Bronze'} On-Chain Certificate.
+        {entries && entries.length > 0 ? (
+          entries.map((entry, index) => {
+            const place = index + 1;
+            let color;
+            switch (place) {
+              case 1:
+                color = '#FFD700'; // Gold
+                break;
+              case 2:
+                color = '#C0C0C0'; // Silver
+                break;
+              case 3:
+                color = '#CD7F32'; // Bronze
+                break;
+              default:
+                color = '#FFFFFF';
+            }
+            return (
+              <Grid item xs={12} key={entry.id}>
+                <Card sx={{ border: `2px solid ${color}`, borderRadius: 2, bgcolor: '#1a1a1a' }}>
+                  <CardMedia
+                    component="img"
+                    height="300"
+                    image={`https://images.tzkt.io/${entry.contractAddress}/${entry.tokenId}`}
+                    alt={entry.contractAddress}
+                    sx={{ objectFit: 'cover' }}
+                  />
+                  <CardContent>
+                    <Typography variant="h5" sx={{ color }}>
+                      {place === 1 ? '1st Place' : place === 2 ? '2nd Place' : '3rd Place'}
                     </Typography>
-                  )}
-                </CardContent>
-              </Card>
-            </Grid>
-          );
-        })}
+                    <Typography variant="h6">Artist: {entry.walletAddress}</Typography>
+                    <Typography variant="body2">Votes: {entry.votes}</Typography>
+                    {competitionEnded && (
+                      <Typography variant="body1" sx={{ mt: 2 }}>
+                        Congratulations! You will receive $
+                        {place === 1 ? '1000' : place === 2 ? '500' : '100'} in Tezos and a{' '}
+                        {place === 1 ? 'Gold' : place === 2 ? 'Silver' : 'Bronze'} On-Chain Certificate.
+                      </Typography>
+                    )}
+                  </CardContent>
+                </Card>
+              </Grid>
+            );
+          })
+        ) : (
+          <Typography variant="body1">No entries available.</Typography>
+        )}
       </Grid>
     </Container>
   );

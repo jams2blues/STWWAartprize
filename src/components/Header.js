@@ -13,6 +13,7 @@ const GradientAppBar = styled(AppBar)({
 
 const HeaderText = styled(Typography)({
   color: '#FFFFFF',
+  textShadow: '2px 2px 4px rgba(0,0,0,0.6)',
 });
 
 const Header = () => {

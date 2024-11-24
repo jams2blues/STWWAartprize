@@ -5,7 +5,7 @@ const webpack = require('webpack');
 module.exports = {
   webpack: {
     configure: (webpackConfig, { env, paths }) => {
-      // Disable source maps in production to eliminate source map errors
+      // Disable source maps in production
       if (env === 'production') {
         webpackConfig.devtool = false;
       }
@@ -33,10 +33,18 @@ module.exports = {
         }),
       ];
 
-      // Ensure '.js' extension is resolved to prevent module resolution issues
+      // Ensure '.js' extension is resolved
       webpackConfig.resolve.extensions = [
         ...webpackConfig.resolve.extensions,
         '.js',
+      ];
+
+      // Suppress specific source map warnings
+      webpackConfig.ignoreWarnings = [
+        {
+          module: /@airgap\/beacon-core/,
+          message: /Failed to parse source map/,
+        },
       ];
 
       return webpackConfig;

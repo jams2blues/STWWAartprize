@@ -10,6 +10,7 @@ import {
   Typography,
   Button,
   Alert,
+  CircularProgress,
 } from '@mui/material';
 import { query } from 'thin-backend';
 import { useQuery } from 'thin-backend-react';
@@ -20,7 +21,7 @@ import Countdown from 'react-countdown';
 
 const VotingGallery = () => {
   const { walletAddress, connectWallet } = useContext(WalletContext);
-  const entries = useQuery(query('entries').orderByDesc('votes'));
+  const { data: entries, error, loading } = useQuery(query('entries').orderByDesc('votes'));
   const [message, setMessage] = useState({ type: '', text: '' });
   const [voted, setVoted] = useState(false);
   const { executeRecaptcha } = useGoogleReCaptcha();
@@ -74,6 +75,43 @@ const VotingGallery = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <Container
+        maxWidth="lg"
+        sx={{
+          mt: 4,
+          bgcolor: '#000000',
+          color: '#FFFFFF',
+          minHeight: '100vh',
+          padding: 4,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        <CircularProgress color="secondary" />
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container
+        maxWidth="lg"
+        sx={{
+          mt: 4,
+          bgcolor: '#000000',
+          color: '#FFFFFF',
+          minHeight: '100vh',
+          padding: 4,
+        }}
+      >
+        <Alert severity="error">Failed to load entries. Please try again later.</Alert>
+      </Container>
+    );
+  }
+
   return (
     <Container
       maxWidth="lg"
@@ -108,41 +146,45 @@ const VotingGallery = () => {
         </Button>
       )}
       <Grid container spacing={2} sx={{ mt: 2 }}>
-        {entries.map((entry) => (
-          <Grid item xs={12} sm={6} md={4} key={entry.id}>
-            <Card sx={{ bgcolor: '#1a1a1a', borderRadius: 2 }}>
-              <CardMedia
-                component="img"
-                height="200"
-                image={`https://images.tzkt.io/${entry.contractAddress}/${entry.tokenId}`}
-                alt={entry.contractAddress}
-                sx={{ objectFit: 'cover' }}
-              />
-              <CardContent>
-                <Typography variant="h6">Artist: {entry.walletAddress}</Typography>
-                <Typography variant="body2">Votes: {entry.votes}</Typography>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => handleVote(entry.id)}
-                  disabled={!walletAddress || voted}
-                  sx={{ mt: 1 }}
-                >
-                  Vote
-                </Button>
-                <Button
-                  variant="outlined"
-                  color="secondary"
-                  href={`https://objkt.com/asset/${entry.contractAddress}/${entry.tokenId}`}
-                  target="_blank"
-                  sx={{ mt: 1, ml: 1 }}
-                >
-                  View on OBJKT
-                </Button>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
+        {entries && entries.length > 0 ? (
+          entries.map((entry) => (
+            <Grid item xs={12} sm={6} md={4} key={entry.id}>
+              <Card sx={{ bgcolor: '#1a1a1a', borderRadius: 2 }}>
+                <CardMedia
+                  component="img"
+                  height="200"
+                  image={`https://images.tzkt.io/${entry.contractAddress}/${entry.tokenId}`}
+                  alt={entry.contractAddress}
+                  sx={{ objectFit: 'cover' }}
+                />
+                <CardContent>
+                  <Typography variant="h6">Artist: {entry.walletAddress}</Typography>
+                  <Typography variant="body2">Votes: {entry.votes}</Typography>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => handleVote(entry.id)}
+                    disabled={!walletAddress || voted}
+                    sx={{ mt: 1 }}
+                  >
+                    Vote
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    color="secondary"
+                    href={`https://objkt.com/asset/${entry.contractAddress}/${entry.tokenId}`}
+                    target="_blank"
+                    sx={{ mt: 1, ml: 1 }}
+                  >
+                    View on OBJKT
+                  </Button>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))
+        ) : (
+          <Typography variant="body1">No entries available for voting.</Typography>
+        )}
       </Grid>
     </Container>
   );

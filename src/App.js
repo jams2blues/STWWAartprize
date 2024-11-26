@@ -34,7 +34,6 @@ function App() {
           <Route path="/" element={<SubmitEntry />} />
           <Route path="/voting-gallery" element={<VotingGallery />} />
           <Route path="/top-three" element={<TopThree />} />
-          {/* Add other routes as needed */}
           {/* 404 Not Found Route */}
           <Route path="*" element={<NotFound />} />
         </Routes>

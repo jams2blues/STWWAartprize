@@ -15,7 +15,7 @@ import { WalletContext } from '../contexts/WalletContext';
 import { validateContract } from '../utils/tezosUtils';
 import { submitEntry } from '../utils/thinBackendUtils';
 import { useNavigate } from 'react-router-dom';
-import ReCAPTCHA from 'react-google-recaptcha'; // Import ReCAPTCHA
+import ReCAPTCHA from 'react-google-recaptcha';
 import Countdown from 'react-countdown';
 
 const SubmitEntry = () => {
@@ -57,10 +57,10 @@ const SubmitEntry = () => {
       }
 
       // Validate the contract and token ID
-      const isValid = await validateContract(contractAddress, tokenId, walletAddress);
+      const isValid = await validateContract(contractAddress, tokenId);
 
       if (!isValid) {
-        setMessage({ type: 'error', text: 'Invalid ZeroContract or you do not own the token.' });
+        setMessage({ type: 'error', text: 'Invalid ZeroContract or the token does not meet the criteria.' });
         setLoading(false);
         return;
       }
@@ -86,7 +86,7 @@ const SubmitEntry = () => {
         mt: 4,
         bgcolor: '#000000',
         color: '#FFFFFF',
-        minHeight: '100vh',
+        minHeight: '80vh',
         padding: 4,
         borderRadius: 2,
       }}

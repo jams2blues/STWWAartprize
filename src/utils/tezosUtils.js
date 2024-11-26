@@ -27,7 +27,7 @@ const detectContractVersion = (entrypoints) => {
   return v2EntrypointsPresent.length >= 2 ? 'v2' : 'v1';
 };
 
-export const validateContract = async (contractAddress, tokenId, walletAddress) => {
+export const validateContract = async (contractAddress, tokenId) => {
   try {
     // Step 1: Fetch the contract and its entrypoints
     const contract = await Tezos.contract.at(contractAddress);
@@ -110,15 +110,7 @@ export const validateContract = async (contractAddress, tokenId, walletAddress) 
       return false;
     }
 
-    // Step 6: Check if the wallet address owns the token
-    const ownershipResponse = await axios.get(
-      `${API_BASE_URL}/tokens/balances?contract=${contractAddress}&token.id=${tokenId}&account=${walletAddress}`
-    );
-
-    if (ownershipResponse.data.length === 0) {
-      console.error('Wallet does not own the token.');
-      return false;
-    }
+    // **Ownership Verification Removed**
 
     // All validations passed
     return true;

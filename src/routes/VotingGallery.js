@@ -16,12 +16,13 @@ import { query } from 'thin-backend';
 import { useQuery } from 'thin-backend-react';
 import { recordVote } from '../utils/thinBackendUtils';
 import { WalletContext } from '../contexts/WalletContext';
-import ReCAPTCHA from 'react-google-recaptcha'; // Import ReCAPTCHA
+import ReCAPTCHA from 'react-google-recaptcha';
 import Countdown from 'react-countdown';
 
 const VotingGallery = () => {
   const { walletAddress, connectWallet } = useContext(WalletContext);
-  const { data: entries, error, loading } = useQuery(query('entries').orderByDesc('votes'));
+  const { data, error, loading } = useQuery(query('entries').orderByDesc('votes'));
+  const [entries, setEntries] = useState([]);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [voted, setVoted] = useState(false);
   const [captchaValue, setCaptchaValue] = useState(null);
@@ -29,6 +30,14 @@ const VotingGallery = () => {
   const handleCaptchaChange = (value) => {
     setCaptchaValue(value);
   };
+
+  useEffect(() => {
+    if (data && Array.isArray(data)) {
+      setEntries(data);
+    } else {
+      setEntries([]);
+    }
+  }, [data]);
 
   useEffect(() => {
     const checkIfVoted = async () => {

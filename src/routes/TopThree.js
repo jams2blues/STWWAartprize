@@ -16,8 +16,17 @@ import { useQuery } from 'thin-backend-react';
 import Countdown from 'react-countdown';
 
 const TopThree = () => {
-  const { data: entries, error, loading } = useQuery(query('entries').orderByDesc('votes').limit(3));
+  const { data, error, loading } = useQuery(query('entries').orderByDesc('votes').limit(3));
+  const [entries, setEntries] = useState([]);
   const [competitionEnded, setCompetitionEnded] = useState(false);
+
+  useEffect(() => {
+    if (data && Array.isArray(data)) {
+      setEntries(data);
+    } else {
+      setEntries([]);
+    }
+  }, [data]);
 
   useEffect(() => {
     const now = new Date();

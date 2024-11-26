@@ -35,7 +35,7 @@ const TopThree = () => {
           mt: 4,
           bgcolor: '#000000',
           color: '#FFFFFF',
-          minHeight: '100vh',
+          minHeight: '80vh',
           padding: 4,
           display: 'flex',
           justifyContent: 'center',
@@ -55,7 +55,7 @@ const TopThree = () => {
           mt: 4,
           bgcolor: '#000000',
           color: '#FFFFFF',
-          minHeight: '100vh',
+          minHeight: '80vh',
           padding: 4,
         }}
       >
@@ -71,7 +71,7 @@ const TopThree = () => {
         mt: 4,
         bgcolor: '#000000',
         color: '#FFFFFF',
-        minHeight: '100vh',
+        minHeight: '80vh',
         padding: 4,
         borderRadius: 2,
       }}
@@ -105,7 +105,8 @@ const TopThree = () => {
                     component="img"
                     height="300"
                     image={`https://images.tzkt.io/${entry.contractAddress}/${entry.tokenId}`}
-                    alt={entry.contractAddress}
+                    alt={`Token ID ${entry.tokenId}`}
+                    loading="lazy" // Enable native lazy loading
                     sx={{ objectFit: 'cover' }}
                   />
                   <CardContent>
@@ -127,7 +128,9 @@ const TopThree = () => {
             );
           })
         ) : (
-          <Typography variant="body1">No entries available.</Typography>
+          <Grid item xs={12}>
+            <Typography variant="body1">No entries available.</Typography>
+          </Grid>
         )}
       </Grid>
     </Container>

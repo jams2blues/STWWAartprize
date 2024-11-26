@@ -9,12 +9,13 @@ import {
   Box,
   Alert,
   CircularProgress,
+  Grid,
 } from '@mui/material';
 import { WalletContext } from '../contexts/WalletContext';
 import { validateContract } from '../utils/tezosUtils';
 import { submitEntry } from '../utils/thinBackendUtils';
 import { useNavigate } from 'react-router-dom';
-import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
+import ReCAPTCHA from 'react-google-recaptcha';
 import Countdown from 'react-countdown';
 
 const SubmitEntry = () => {
@@ -23,36 +24,33 @@ const SubmitEntry = () => {
   const [tokenId, setTokenId] = useState('');
   const [message, setMessage] = useState({ type: '', text: '' });
   const [loading, setLoading] = useState(false);
+  const [captchaValue, setCaptchaValue] = useState(null);
   const navigate = useNavigate();
-  const { executeRecaptcha } = useGoogleReCaptcha();
+
+  const handleCaptchaChange = (value) => {
+    setCaptchaValue(value);
+  };
 
   const handleSubmit = async () => {
     setLoading(true);
     setMessage({ type: '', text: '' });
 
-    if (!executeRecaptcha) {
-      setMessage({ type: 'error', text: 'reCAPTCHA not yet available.' });
+    if (!captchaValue) {
+      setMessage({ type: 'error', text: 'Please complete the CAPTCHA.' });
       setLoading(false);
       return;
     }
 
     try {
-      // Execute reCAPTCHA with action 'submit_entry'
-      const token = await executeRecaptcha('submit_entry');
-
-      // Send token to backend for verification
+      // Send CAPTCHA token to backend for verification
       const captchaResponse = await fetch('/api/verifyCaptcha', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, action: 'submit_entry' }),
+        body: JSON.stringify({ token: captchaValue }),
       });
       const captchaResult = await captchaResponse.json();
 
-      if (
-        !captchaResult.success ||
-        captchaResult.action !== 'submit_entry' ||
-        captchaResult.score < 0.5
-      ) {
+      if (!captchaResult.success) {
         setMessage({ type: 'error', text: 'CAPTCHA verification failed. Please try again.' });
         setLoading(false);
         return;
@@ -77,6 +75,7 @@ const SubmitEntry = () => {
       setMessage({ type: 'error', text: error.message });
     } finally {
       setLoading(false);
+      setCaptchaValue(null); // Reset CAPTCHA
     }
   };
 
@@ -121,50 +120,54 @@ const SubmitEntry = () => {
       </Box>
 
       <Box sx={{ mt: 2 }}>
-        <TextField
-          fullWidth
-          label="ZeroContract Address"
-          value={contractAddress}
-          onChange={(e) => setContractAddress(e.target.value)}
-          sx={{
-            mb: 2,
-            input: { color: '#FFFFFF' },
-            label: { color: '#FFFFFF' },
-            '& .MuiOutlinedInput-root': {
-              '& fieldset': {
-                borderColor: '#FFFFFF',
-              },
-              '&:hover fieldset': {
-                borderColor: '#1E90FF',
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: '#1E90FF',
-              },
-            },
-          }}
-        />
-        <TextField
-          fullWidth
-          label="Token ID"
-          value={tokenId}
-          onChange={(e) => setTokenId(e.target.value)}
-          sx={{
-            mb: 2,
-            input: { color: '#FFFFFF' },
-            label: { color: '#FFFFFF' },
-            '& .MuiOutlinedInput-root': {
-              '& fieldset': {
-                borderColor: '#FFFFFF',
-              },
-              '&:hover fieldset': {
-                borderColor: '#1E90FF',
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: '#1E90FF',
-              },
-            },
-          }}
-        />
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="ZeroContract Address"
+              value={contractAddress}
+              onChange={(e) => setContractAddress(e.target.value)}
+              sx={{
+                input: { color: '#FFFFFF' },
+                label: { color: '#FFFFFF' },
+                '& .MuiOutlinedInput-root': {
+                  '& fieldset': {
+                    borderColor: '#FFFFFF',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#1E90FF',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#1E90FF',
+                  },
+                },
+              }}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Token ID"
+              value={tokenId}
+              onChange={(e) => setTokenId(e.target.value)}
+              sx={{
+                input: { color: '#FFFFFF' },
+                label: { color: '#FFFFFF' },
+                '& .MuiOutlinedInput-root': {
+                  '& fieldset': {
+                    borderColor: '#FFFFFF',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#1E90FF',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#1E90FF',
+                  },
+                },
+              }}
+            />
+          </Grid>
+        </Grid>
         {message.text && (
           <Alert
             severity={message.type}
@@ -177,12 +180,19 @@ const SubmitEntry = () => {
             {message.text}
           </Alert>
         )}
+        <ReCAPTCHA
+          sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}
+          onChange={handleCaptchaChange}
+          theme="dark"
+          style={{ marginTop: '16px' }}
+        />
         <Button
           variant="contained"
           color="primary"
           onClick={handleSubmit}
           disabled={!walletAddress || loading}
           sx={{ mt: 2 }}
+          fullWidth
         >
           {loading ? <CircularProgress size={24} /> : 'Submit Entry'}
         </Button>

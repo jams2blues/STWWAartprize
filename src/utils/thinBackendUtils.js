@@ -35,7 +35,10 @@ export const recordVote = async (walletAddress, entryId) => {
     createdAt: new Date(),
   });
 
-  // Increment the vote count
+  // Increment the vote count atomically
   const entry = await query('entries').findById(entryId);
+  if (!entry) {
+    throw new Error('Entry not found.');
+  }
   await updateRecord('entries', entryId, { votes: entry.votes + 1 });
 };

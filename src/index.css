@@ -16,3 +16,7 @@ a {
 a:hover {
   color: #1E90FF;
 }
+
+* {
+  box-sizing: border-box;
+}

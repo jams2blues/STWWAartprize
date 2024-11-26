@@ -2,34 +2,30 @@
 
 export default async function handler(req, res) {
   if (req.method === 'POST') {
-    const { token, action } = req.body;
+    const { token } = req.body;
     const secretKey = process.env.RECAPTCHA_SECRET_KEY;
 
-    if (!token || !action) {
-      return res.status(400).json({ success: false, message: 'Missing token or action.' });
+    if (!token) {
+      return res.status(400).json({ success: false, message: 'Missing token.' });
     }
 
     try {
-      const response = await fetch(`https://www.google.com/recaptcha/api/siteverify`, {
+      const params = new URLSearchParams();
+      params.append('secret', secretKey);
+      params.append('response', token);
+
+      const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: `secret=${secretKey}&response=${token}`,
+        body: params.toString(),
       });
 
       const data = await response.json();
 
       if (!data.success) {
         return res.status(400).json({ success: false, message: 'reCAPTCHA verification failed.' });
-      }
-
-      if (data.action !== action) {
-        return res.status(400).json({ success: false, message: 'Invalid action.' });
-      }
-
-      if (data.score < 0.5) {
-        return res.status(400).json({ success: false, message: 'Low reCAPTCHA score.' });
       }
 
       res.status(200).json({ success: true });

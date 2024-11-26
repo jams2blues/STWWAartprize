@@ -1,34 +1,46 @@
 // src/App.js
 
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Routes, Route } from 'react-router-dom';
-import SubmitEntry from './routes/SubmitEntry';
-import VotingGallery from './routes/VotingGallery';
-import TopThree from './routes/TopThree';
 import Header from './components/Header';
-import './App.css'; // Include custom styles if needed
+import { CircularProgress, Box } from '@mui/material';
+
+// Lazy load the route components
+const SubmitEntry = lazy(() => import('./routes/SubmitEntry'));
+const VotingGallery = lazy(() => import('./routes/VotingGallery'));
+const TopThree = lazy(() => import('./routes/TopThree'));
+const NotFound = lazy(() => import('./routes/NotFound'));
 
 function App() {
   return (
     <>
       <Header />
-      <Routes>
-        <Route path="/" element={<SubmitEntry />} />
-        <Route path="/voting-gallery" element={<VotingGallery />} />
-        <Route path="/top-three" element={<TopThree />} />
-        {/* Add other routes as needed */}
-        {/* Optional: Add a 404 Not Found route */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      <Suspense
+        fallback={
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              minHeight: '80vh',
+              bgcolor: '#000000',
+            }}
+          >
+            <CircularProgress color="secondary" />
+          </Box>
+        }
+      >
+        <Routes>
+          <Route path="/" element={<SubmitEntry />} />
+          <Route path="/voting-gallery" element={<VotingGallery />} />
+          <Route path="/top-three" element={<TopThree />} />
+          {/* Add other routes as needed */}
+          {/* 404 Not Found Route */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
     </>
   );
 }
-
-const NotFound = () => (
-  <div style={{ padding: '2rem', textAlign: 'center', color: '#FFFFFF', backgroundColor: '#000000' }}>
-    <h2>404 - Page Not Found</h2>
-    <p>The page you're looking for doesn't exist.</p>
-  </div>
-);
 
 export default App;

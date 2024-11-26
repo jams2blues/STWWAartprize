@@ -16,7 +16,7 @@ import { query } from 'thin-backend';
 import { useQuery } from 'thin-backend-react';
 import { recordVote } from '../utils/thinBackendUtils';
 import { WalletContext } from '../contexts/WalletContext';
-import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
+import ReCAPTCHA from 'react-google-recaptcha';
 import Countdown from 'react-countdown';
 
 const VotingGallery = () => {
@@ -24,7 +24,11 @@ const VotingGallery = () => {
   const { data: entries, error, loading } = useQuery(query('entries').orderByDesc('votes'));
   const [message, setMessage] = useState({ type: '', text: '' });
   const [voted, setVoted] = useState(false);
-  const { executeRecaptcha } = useGoogleReCaptcha();
+  const [captchaValue, setCaptchaValue] = useState(null);
+
+  const handleCaptchaChange = (value) => {
+    setCaptchaValue(value);
+  };
 
   useEffect(() => {
     const checkIfVoted = async () => {
@@ -39,28 +43,21 @@ const VotingGallery = () => {
   }, [walletAddress]);
 
   const handleVote = async (entryId) => {
-    if (!executeRecaptcha) {
-      setMessage({ type: 'error', text: 'reCAPTCHA not yet available.' });
+    if (!captchaValue) {
+      setMessage({ type: 'error', text: 'Please complete the CAPTCHA.' });
       return;
     }
 
     try {
-      // Execute reCAPTCHA with action 'vote'
-      const token = await executeRecaptcha('vote');
-
-      // Send token to backend for verification
+      // Send CAPTCHA token to backend for verification
       const captchaResponse = await fetch('/api/verifyCaptcha', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, action: 'vote' }),
+        body: JSON.stringify({ token: captchaValue }),
       });
       const captchaResult = await captchaResponse.json();
 
-      if (
-        !captchaResult.success ||
-        captchaResult.action !== 'vote' ||
-        captchaResult.score < 0.5
-      ) {
+      if (!captchaResult.success) {
         setMessage({ type: 'error', text: 'CAPTCHA verification failed. Please try again.' });
         return;
       }
@@ -72,6 +69,8 @@ const VotingGallery = () => {
     } catch (error) {
       console.error(error);
       setMessage({ type: 'error', text: error.message });
+    } finally {
+      setCaptchaValue(null); // Reset CAPTCHA
     }
   };
 
@@ -83,7 +82,7 @@ const VotingGallery = () => {
           mt: 4,
           bgcolor: '#000000',
           color: '#FFFFFF',
-          minHeight: '100vh',
+          minHeight: '80vh',
           padding: 4,
           display: 'flex',
           justifyContent: 'center',
@@ -103,7 +102,7 @@ const VotingGallery = () => {
           mt: 4,
           bgcolor: '#000000',
           color: '#FFFFFF',
-          minHeight: '100vh',
+          minHeight: '80vh',
           padding: 4,
         }}
       >
@@ -119,7 +118,7 @@ const VotingGallery = () => {
         mt: 4,
         bgcolor: '#000000',
         color: '#FFFFFF',
-        minHeight: '100vh',
+        minHeight: '80vh',
         padding: 4,
         borderRadius: 2,
       }}
@@ -154,7 +153,8 @@ const VotingGallery = () => {
                   component="img"
                   height="200"
                   image={`https://images.tzkt.io/${entry.contractAddress}/${entry.tokenId}`}
-                  alt={entry.contractAddress}
+                  alt={`Token ID ${entry.tokenId}`}
+                  loading="lazy" // Enable native lazy loading
                   sx={{ objectFit: 'cover' }}
                 />
                 <CardContent>
@@ -183,9 +183,16 @@ const VotingGallery = () => {
             </Grid>
           ))
         ) : (
-          <Typography variant="body1">No entries available for voting.</Typography>
+          <Grid item xs={12}>
+            <Typography variant="body1">No entries available for voting.</Typography>
+          </Grid>
         )}
       </Grid>
+      <ReCAPTCHA
+        sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}
+        onChange={handleCaptchaChange}
+        theme="dark"
+      />
     </Container>
   );
 };

@@ -10,8 +10,8 @@ import { WalletProvider } from './contexts/WalletContext';
 import { initThinBackend } from 'thin-backend';
 import { ThinBackend } from 'thin-backend-react';
 import './index.css'; // Include default styles
-import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3';
-import * as serviceWorkerRegistration from './serviceWorkerRegistration';
+import { GoogleReCaptchaProvider } from 'react-google-recaptcha';
+
 import { Buffer } from 'buffer';
 import process from 'process';
 
@@ -46,6 +46,3 @@ root.render(
     </ThemeProvider>
   </React.StrictMode>
 );
-
-// Register the service worker for PWA
-serviceWorkerRegistration.register();

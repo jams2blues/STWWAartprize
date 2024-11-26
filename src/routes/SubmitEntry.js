@@ -13,6 +13,7 @@ import {
 import ReCAPTCHA from 'react-google-recaptcha';
 import WalletConnectButton from '../components/WalletConnectButton';
 import { WalletContext } from '../contexts/WalletContext';
+import axios from 'axios';
 
 function SubmitEntry() {
   const [objktUrl, setObjktUrl] = useState('');
@@ -37,6 +38,19 @@ function SubmitEntry() {
 
     if (!captchaValue) {
       setMessage({ type: 'error', text: 'Please complete the reCAPTCHA.' });
+      return;
+    }
+
+    // Send reCAPTCHA token to your API for verification
+    try {
+      const captchaResponse = await axios.post('/api/verifyCaptcha', { token: captchaValue });
+
+      if (!captchaResponse.data.success) {
+        setMessage({ type: 'error', text: 'reCAPTCHA verification failed. Please try again.' });
+        return;
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'reCAPTCHA verification error. Please try again.' });
       return;
     }
 

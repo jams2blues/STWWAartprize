@@ -8,18 +8,21 @@ import {
   Button,
   Alert,
   Box,
+  Link as MuiLink,
+  Grid,
 } from '@mui/material';
 import ReCAPTCHA from 'react-google-recaptcha';
 import WalletConnectButton from '../components/WalletConnectButton';
 import { WalletContext } from '../contexts/WalletContext';
 import axios from 'axios';
+import qs from 'qs'; // To serialize data as URL-encoded string
 
 function SubmitEntry() {
   const [objktUrl, setObjktUrl] = useState('');
   const [twitterHandle, setTwitterHandle] = useState('');
   const [captchaValue, setCaptchaValue] = useState(null);
   const [message, setMessage] = useState({ type: '', text: '' });
-  const { walletAddress, Tezos } = useContext(WalletContext); // Removed connectWallet and disconnectWallet
+  const { walletAddress, Tezos } = useContext(WalletContext);
 
   const handleSubmit = async () => {
     setMessage({ type: '', text: '' });
@@ -102,13 +105,16 @@ function SubmitEntry() {
       return;
     }
 
-    // Prepare data to submit to Google Form
-    const formData = new FormData();
-    formData.append('entry.414551757', walletAddress); // Wallet Address
-    formData.append('entry.295660436', contractAddress); // Contract Address
-    formData.append('entry.594385145', tokenId); // Token ID
-    formData.append('entry.1645919499', objktUrl); // OBJKT.com Listing URL
-    formData.append('entry.1349731758', twitterHandle); // Twitter Handle
+    // Prepare data to submit to Google Form as URL-encoded string
+    const formData = {
+      'entry.414551757': walletAddress, // Wallet Address
+      'entry.295660436': contractAddress, // Contract Address
+      'entry.594385145': tokenId, // Token ID
+      'entry.1645919499': objktUrl, // OBJKT.com Listing URL
+      'entry.1349731758': twitterHandle, // X (Twitter) Handle
+    };
+
+    const serializedFormData = qs.stringify(formData);
 
     // Submit data to Google Form
     try {
@@ -116,8 +122,11 @@ function SubmitEntry() {
         'https://docs.google.com/forms/u/0/d/e/1FAIpQLSfeHNVem0YEMZmJEPfE2VGM0PLB1bvGFCmQQF0Sz5EoaHk5BA/formResponse',
         {
           method: 'POST',
-          mode: 'no-cors',
-          body: formData,
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: serializedFormData,
+          mode: 'no-cors', // Necessary for Google Forms
         }
       );
 
@@ -142,9 +151,89 @@ function SubmitEntry() {
         Submit Your Entry
       </Typography>
 
-      {/* Competition Rules */}
+      {/* Competition Rules and Overview */}
       <Box sx={{ mb: 4 }}>
-        {/* ... [Competition Rules Content] */}
+        <Typography variant="h6" gutterBottom>
+          RULES and ENTRY Guide
+        </Typography>
+        <Typography variant="body1" paragraph>
+          <strong>ONLY 3 ENTRIES PER ARTIST</strong>
+        </Typography>
+        <Typography variant="body1" paragraph>
+          <strong>Theme:</strong> <em>"Compressionism, anything goes, give us your best compressionism artwork under 20KB, show us what you got! Be yourself, no rules."</em>
+        </Typography>
+        <Typography variant="body1" paragraph>
+          <strong>We will be kicking off your auctions/making offers shortly after the countdown timer ends.</strong>
+        </Typography>
+        <ol>
+          <li>
+            <Typography variant="body1" paragraph>
+              <strong>Create a 1/1 fully on-chain Tezos NFT</strong> using either <strong>v1</strong> or <strong>v2</strong> of the <strong>#ZeroContract</strong> on the no-code platform{' '}
+              <MuiLink href="https://savetheworldwithart.io" target="_blank" rel="noopener noreferrer">
+                savetheworldwithart.io
+              </MuiLink>
+              . Be sure to test with{' '}
+              <MuiLink href="https://ghostnet.savetheworldwithart.io" target="_blank" rel="noopener noreferrer">
+                ghostnet.savetheworldwithart.io
+              </MuiLink>{' '}
+              first.
+            </Typography>
+          </li>
+          <li>
+            <Typography variant="body1" paragraph>
+              <strong>Connect</strong> the same wallet used to mint your art on savetheworldwithart.io to artprize.savetheworldwithart.io and paste your{' '}
+              <strong>OBJKT.com listing</strong> in the following format:
+              <br />
+              <strong>Example:</strong>{' '}
+              <MuiLink href="https://objkt.com/tokens/KT1JFbuyKULdgHi8KjbPAx5Ys8znyXe8BDpn/2" target="_blank" rel="noopener noreferrer">
+                https://objkt.com/tokens/KT1JFbuyKULdgHi8KjbPAx5Ys8znyXe8BDpn/2
+              </MuiLink>
+            </Typography>
+          </li>
+          <li>
+            <Typography variant="body1" paragraph>
+              <strong>Enter your X (Twitter) handle</strong>.
+            </Typography>
+          </li>
+          <li>
+            <Typography variant="body1" paragraph>
+              <strong>Hit submit!</strong>
+            </Typography>
+          </li>
+          <li>
+            <Typography variant="body1" paragraph>
+              After submitting your artwork, make an <strong>X (Twitter)</strong> post showing off your on-chain art skills using our{' '}
+              <MuiLink href="#" target="_blank" rel="noopener noreferrer">
+                #STWWAprize
+              </MuiLink>{' '}
+              tag, and tag{' '}
+              <MuiLink href="https://twitter.com/jams2blues" target="_blank" rel="noopener noreferrer">
+                @jams2blues
+              </MuiLink>{' '}
+              if you want to.
+            </Typography>
+          </li>
+        </ol>
+        <Typography variant="body1" paragraph>
+          <strong>When the countdown timer expires,</strong> our curation team will select the top 10 entries for a community-voted poll competition on X (Twitter). We will tag all entrants and make it fun! The top 3 winners of the poll-off will win the following prizes:
+        </Typography>
+        <ol type="I">
+          <li>
+            <Typography variant="body1" paragraph>
+              <strong>1st place:</strong> Kick-off a live auction or receive an offer of <strong>$600 in Tezos</strong>, & a <strong>Gold Certificate of Achievement</strong> from Save The World With Art™.
+            </Typography>
+          </li>
+          <li>
+            <Typography variant="body1" paragraph>
+              <strong>2nd place:</strong> Kick-off a live auction or receive an offer of <strong>$300 in Tezos</strong>, & a <strong>Silver Certificate of Achievement</strong> from Save The World With Art™.
+            </Typography>
+          </li>
+          <li>
+            <Typography variant="body1" paragraph>
+              <strong>3rd place:</strong> Kick-off a live auction or receive an offer of <strong>$100 in Tezos</strong>, & a <strong>Copper Certificate of Achievement</strong> from Save The World With Art™.
+            </Typography>
+          </li>
+        </ol>
       </Box>
 
       {/* Display messages */}
@@ -160,33 +249,40 @@ function SubmitEntry() {
       {/* Submission Form */}
       {walletAddress && (
         <Box sx={{ mt: 4 }}>
-          <TextField
-            label="OBJKT.com Listing URL"
-            fullWidth
-            required
-            value={objktUrl}
-            onChange={(e) => setObjktUrl(e.target.value)}
-            sx={{ mb: 2 }}
-            placeholder="e.g., https://objkt.com/tokens/KT1JFbuyKULdgHi8KjbPAx5Ys8znyXe8BDpn/2"
-          />
-          <TextField
-            label="X (Twitter) Handle"
-            fullWidth
-            required
-            value={twitterHandle}
-            onChange={(e) => setTwitterHandle(e.target.value)}
-            sx={{ mb: 2 }}
-            placeholder="@yourhandle"
-          />
-          <ReCAPTCHA
-            sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}
-            onChange={handleCaptchaChange}
-            theme="light"
-            sx={{ mb: 2 }}
-          />
-          <Button variant="contained" color="primary" onClick={handleSubmit} fullWidth>
-            Submit Entry
-          </Button>
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <TextField
+                label="OBJKT.com Listing URL"
+                fullWidth
+                required
+                value={objktUrl}
+                onChange={(e) => setObjktUrl(e.target.value)}
+                placeholder="e.g., https://objkt.com/tokens/KT1JFbuyKULdgHi8KjbPAx5Ys8znyXe8BDpn/2"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="X (Twitter) Handle"
+                fullWidth
+                required
+                value={twitterHandle}
+                onChange={(e) => setTwitterHandle(e.target.value)}
+                placeholder="@yourhandle"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <ReCAPTCHA
+                sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}
+                onChange={handleCaptchaChange}
+                theme="light"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Button variant="contained" color="primary" onClick={handleSubmit} fullWidth>
+                Submit Entry
+              </Button>
+            </Grid>
+          </Grid>
         </Box>
       )}
     </Container>

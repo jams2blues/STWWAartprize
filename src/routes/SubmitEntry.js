@@ -313,7 +313,6 @@ function SubmitEntry() {
             onSubmit={handleSubmit}
             action="https://docs.google.com/forms/u/0/d/e/1FAIpQLSfeHNVem0YEMZmJEPfE2VGM0PLB1bvGFCmQQF0Sz5EoaHk5BA/formResponse"
             method="POST"
-            target="hidden_iframe"
           >
             <Grid container spacing={2}>
               {/* OBJKT.com Listing URL */}
@@ -356,12 +355,6 @@ function SubmitEntry() {
               <input type="hidden" name="entry.1645919499" id="objktUrl" />
               <input type="hidden" name="entry.1349731758" id="twitterHandle" />
 
-              {/* Required hidden inputs for Google Forms */}
-              <input type="hidden" name="fvv" value="1" />
-              <input type="hidden" name="draftResponse" value="[]" />
-              <input type="hidden" name="pageHistory" value="0" />
-              <input type="hidden" name="fbzx" value={Date.now()} />
-
               {/* Submit Button */}
               <Grid item xs={12}>
                 <Button variant="contained" color="primary" type="submit" fullWidth>
@@ -370,8 +363,6 @@ function SubmitEntry() {
               </Grid>
             </Grid>
           </form>
-          {/* Invisible iframe to handle form submission */}
-          <iframe name="hidden_iframe" style={{ display: 'none' }}></iframe>
         </Box>
       )}
 

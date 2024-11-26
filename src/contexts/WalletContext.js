@@ -14,16 +14,21 @@ export const WalletProvider = ({ children }) => {
     const initWallet = async () => {
       const wallet = new BeaconWallet({
         name: 'Save The World With Art™ Art Prize',
-        preferredNetwork: 'mainnet', // Use 'mainnet' as per your requirement
+        preferredNetwork: 'mainnet',
       });
 
-      const tezos = new TezosToolkit('https://mainnet.api.tez.ie'); // Mainnet RPC URL
+      const tezos = new TezosToolkit('https://mainnet.api.tez.ie');
       tezos.setWalletProvider(wallet);
 
-      const activeAccount = await wallet.getActiveAccount();
-      if (activeAccount) {
-        setWalletAddress(activeAccount.address);
+      try {
+        const address = await wallet.getPKH();
+        if (address) {
+          setWalletAddress(address);
+        }
+      } catch (error) {
+        console.error('Failed to get wallet address:', error);
       }
+
       setTezos(tezos);
     };
 
@@ -36,15 +41,20 @@ export const WalletProvider = ({ children }) => {
       preferredNetwork: 'mainnet',
     });
 
-    await wallet.requestPermissions({
-      network: {
-        type: 'mainnet',
-      },
-    });
+    try {
+      await wallet.requestPermissions({
+        network: {
+          type: 'mainnet',
+        },
+      });
 
-    const address = await wallet.getPKH();
-    setWalletAddress(address);
-    Tezos.setWalletProvider(wallet);
+      const address = await wallet.getPKH();
+      setWalletAddress(address);
+      Tezos.setWalletProvider(wallet);
+    } catch (error) {
+      console.error('Wallet connection failed:', error);
+      throw error; // Propagate error to be handled in the calling component
+    }
   };
 
   const disconnectWallet = async () => {
@@ -52,8 +62,13 @@ export const WalletProvider = ({ children }) => {
       name: 'Save The World With Art™ Art Prize',
       preferredNetwork: 'mainnet',
     });
-    await wallet.clearActiveAccount();
-    setWalletAddress(null);
+    try {
+      await wallet.clearActiveAccount();
+      setWalletAddress(null);
+    } catch (error) {
+      console.error('Wallet disconnection failed:', error);
+      throw error; // Propagate error to be handled in the calling component
+    }
   };
 
   return (

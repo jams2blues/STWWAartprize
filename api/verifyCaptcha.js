@@ -7,7 +7,7 @@ export default async function handler(req, res) {
   }
 
   const { token } = req.body;
-  const secretKey = process.env.RECAPTCHA_SECRET_KEY; // Use environment variable
+  const secretKey = process.env.RECAPTCHA_SECRET_KEY; // Securely use environment variable
 
   if (!token) {
     res.status(400).json({ success: false, message: 'No token provided.' });
@@ -30,6 +30,7 @@ export default async function handler(req, res) {
       res.status(400).json({ success: false, message: 'reCAPTCHA verification failed.' });
     }
   } catch (error) {
+    console.error('reCAPTCHA verification error:', error);
     res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 }

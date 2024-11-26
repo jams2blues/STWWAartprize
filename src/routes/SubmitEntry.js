@@ -20,7 +20,7 @@ function SubmitEntry() {
   const [twitterHandle, setTwitterHandle] = useState('');
   const [captchaValue, setCaptchaValue] = useState(null);
   const [message, setMessage] = useState({ type: '', text: '' });
-  const { walletAddress, Tezos } = useContext(WalletContext);
+  const { walletAddress, Tezos, connectWallet, disconnectWallet } = useContext(WalletContext);
 
   const handleSubmit = async () => {
     setMessage({ type: '', text: '' });
@@ -50,6 +50,7 @@ function SubmitEntry() {
         return;
       }
     } catch (error) {
+      console.error('reCAPTCHA verification error:', error);
       setMessage({ type: 'error', text: 'reCAPTCHA verification error. Please try again.' });
       return;
     }
@@ -97,7 +98,7 @@ function SubmitEntry() {
         return;
       }
     } catch (error) {
-      console.error(error);
+      console.error('Contract verification failed:', error);
       setMessage({ type: 'error', text: 'Failed to verify the contract address.' });
       return;
     }
@@ -127,7 +128,7 @@ function SubmitEntry() {
       setTwitterHandle('');
       setCaptchaValue(null);
     } catch (error) {
-      console.error(error);
+      console.error('Google Form submission error:', error);
       setMessage({ type: 'error', text: 'An error occurred while submitting your entry.' });
     }
   };

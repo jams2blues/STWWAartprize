@@ -25,7 +25,7 @@ function SubmitEntry() {
   const [twitterHandle, setTwitterHandle] = useState('');
   const [captchaValue, setCaptchaValue] = useState(null);
   const [message, setMessage] = useState({ type: '', text: '' });
-  const { walletAddress, Tezos } = useContext(WalletContext);
+  const { walletAddress } = useContext(WalletContext);
   const [timeLeft, setTimeLeft] = useState({});
   const [isDeadlinePassed, setIsDeadlinePassed] = useState(false);
 
@@ -107,70 +107,20 @@ function SubmitEntry() {
       return;
     }
 
-    // Extract contract address and token ID from OBJKT.com URL
-    const regex = /https:\/\/objkt\.com\/tokens\/(KT1[a-zA-Z0-9]{33})\/(\d+)/;
-    const match = objktUrl.match(regex);
-
-    if (!match) {
-      setMessage({ type: 'error', text: 'Please enter a valid OBJKT.com listing URL.' });
-      return;
-    }
-
-    const contractAddress = match[1];
-    const tokenId = match[2];
-
-    // Verify if the contract is ZeroContract v1 or v2
-    try {
-      const contract = await Tezos.contract.at(contractAddress);
-      const entrypoints = contract.entrypoints;
-
-      // Function to detect contract version
-      const detectContractVersion = (entrypoints) => {
-        const v2UniqueEntrypoints = [
-          'add_child',
-          'add_parent',
-          'remove_child',
-          'remove_parent',
-        ];
-
-        const entrypointNames = Object.keys(entrypoints).map((ep) => ep.toLowerCase());
-
-        const v2Present = v2UniqueEntrypoints.filter((ep) => entrypointNames.includes(ep));
-
-        return v2Present.length >= 2 ? 'v2' : 'v1';
-      };
-
-      const contractVersion = detectContractVersion(entrypoints);
-
-      if (contractVersion !== 'v1' && contractVersion !== 'v2') {
-        setMessage({
-          type: 'error',
-          text: 'The contract is neither ZeroContract v1 nor v2. Please submit a valid ZeroContract entry.',
-        });
-        return;
-      }
-    } catch (error) {
-      console.error('Contract verification failed:', error);
-      setMessage({ type: 'error', text: 'Failed to verify the contract address.' });
-      return;
-    }
-
     // Submit data to Google Form
-    submitToGoogleForm(walletAddress, contractAddress, tokenId, objktUrl, formattedTwitterHandle);
+    submitToGoogleForm(walletAddress, objktUrl, formattedTwitterHandle);
   };
 
   // Function to submit data to Google Form using a hidden form submission
-  const submitToGoogleForm = (walletAddr, contractAddr, tokenId, objktUrl, twitterHandle) => {
+  const submitToGoogleForm = (walletAddr, objktUrl, twitterHandle) => {
     const GOOGLE_FORM_ACTION_URL =
       'https://docs.google.com/forms/d/e/1FAIpQLSf3_BasFTXaInMtTlatKjOmEJqWMJXBemj5ISpvBOHwltM3uw/formResponse';
 
     // Replace the following with your actual entry.X IDs
     const GOOGLE_FORM_ENTRY_IDS = {
-      walletAddress: 'entry.722511281', // Replace with actual entry ID for 'wallet address'
-      contractAddress: 'entry.783348151', // Replace with actual entry ID for 'contract address'
-      tokenId: 'entry.1070729183', // Replace with actual entry ID for 'token id'
-      objktUrl: 'entry.24015503', // Replace with actual entry ID for 'objkt url'
-      twitterHandle: 'entry.1295894614', // Replace with actual entry ID for 'x handle'
+      walletAddress: 'entry.722511281',      // Replace with actual entry ID for 'wallet address'
+      objktUrl: 'entry.24015503',           // Replace with actual entry ID for 'objkt url'
+      twitterHandle: 'entry.1295894614',    // Replace with actual entry ID for 'x handle'
     };
 
     // Create a new form element
@@ -182,8 +132,6 @@ function SubmitEntry() {
     // Create hidden input fields for each form entry
     const fields = {
       [GOOGLE_FORM_ENTRY_IDS.walletAddress]: walletAddr,
-      [GOOGLE_FORM_ENTRY_IDS.contractAddress]: contractAddr,
-      [GOOGLE_FORM_ENTRY_IDS.tokenId]: tokenId,
       [GOOGLE_FORM_ENTRY_IDS.objktUrl]: objktUrl,
       [GOOGLE_FORM_ENTRY_IDS.twitterHandle]: twitterHandle,
     };
@@ -258,7 +206,7 @@ function SubmitEntry() {
 
       {/* Countdown Timer */}
       <Box sx={{ mb: 4, textAlign: 'center' }}>
-        <Typography variant="h6">
+        <Typography variant="h6" sx={{ color: 'red' }}>
           Time Left: {timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s
         </Typography>
       </Box>

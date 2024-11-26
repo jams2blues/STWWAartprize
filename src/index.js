@@ -10,7 +10,7 @@ import { WalletProvider } from './contexts/WalletContext';
 import { initThinBackend } from 'thin-backend';
 import { ThinBackend } from 'thin-backend-react';
 import './index.css'; // Include default styles
-import { GoogleReCaptchaProvider } from 'react-google-recaptcha';
+import { GoogleReCaptchaProvider } from 'react-google-recaptcha'; // Remove this line
 
 import { Buffer } from 'buffer';
 import process from 'process';
@@ -26,23 +26,14 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <ThemeProvider theme={theme}>
-      <GoogleReCaptchaProvider
-        reCaptchaKey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}
-        scriptProps={{
-          async: true,
-          defer: true,
-          appendTo: 'head',
-          nonce: undefined,
-        }}
-      >
-        <WalletProvider>
-          <ThinBackend>
-            <Router>
-              <App />
-            </Router>
-          </ThinBackend>
-        </WalletProvider>
-      </GoogleReCaptchaProvider>
+      {/* Remove GoogleReCaptchaProvider */}
+      <WalletProvider>
+        <ThinBackend>
+          <Router>
+            <App />
+          </Router>
+        </ThinBackend>
+      </WalletProvider>
     </ThemeProvider>
   </React.StrictMode>
 );

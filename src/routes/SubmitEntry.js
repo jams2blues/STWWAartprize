@@ -15,7 +15,7 @@ import { WalletContext } from '../contexts/WalletContext';
 import { validateContract } from '../utils/tezosUtils';
 import { submitEntry } from '../utils/thinBackendUtils';
 import { useNavigate } from 'react-router-dom';
-import ReCAPTCHA from 'react-google-recaptcha';
+import ReCAPTCHA from 'react-google-recaptcha'; // Import ReCAPTCHA
 import Countdown from 'react-countdown';
 
 const SubmitEntry = () => {

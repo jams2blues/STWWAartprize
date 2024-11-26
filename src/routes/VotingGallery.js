@@ -16,7 +16,7 @@ import { query } from 'thin-backend';
 import { useQuery } from 'thin-backend-react';
 import { recordVote } from '../utils/thinBackendUtils';
 import { WalletContext } from '../contexts/WalletContext';
-import ReCAPTCHA from 'react-google-recaptcha';
+import ReCAPTCHA from 'react-google-recaptcha'; // Import ReCAPTCHA
 import Countdown from 'react-countdown';
 
 const VotingGallery = () => {
@@ -192,6 +192,7 @@ const VotingGallery = () => {
         sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}
         onChange={handleCaptchaChange}
         theme="dark"
+        style={{ marginTop: '16px' }}
       />
     </Container>
   );

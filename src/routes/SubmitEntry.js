@@ -88,6 +88,11 @@ function SubmitEntry() {
       return;
     }
 
+    // Convert Twitter handle to https://x.com/handle
+    const formattedTwitterHandle = twitterHandle.startsWith('@')
+      ? `https://x.com/${twitterHandle.substring(1)}`
+      : `https://x.com/${twitterHandle}`;
+
     // Send reCAPTCHA token to your API for verification
     try {
       const captchaResponse = await axios.post('/api/verifyCaptcha', { token: captchaValue });
@@ -151,22 +156,24 @@ function SubmitEntry() {
     }
 
     // Submit data to Google Form
-    submitToGoogleForm(walletAddress, contractAddress, tokenId, objktUrl, twitterHandle);
+    submitToGoogleForm(walletAddress, contractAddress, tokenId, objktUrl, formattedTwitterHandle);
   };
 
   // Function to submit data to Google Form using a hidden form submission
   const submitToGoogleForm = (walletAddr, contractAddr, tokenId, objktUrl, twitterHandle) => {
     const GOOGLE_FORM_ACTION_URL =
-      'https://docs.google.com/forms/u/0/d/e/1FAIpQLSfeHNVem0YEMZmJEPfE2VGM0PLB1bvGFCmQQF0Sz5EoaHk5BA/formResponse';
+      'https://docs.google.com/forms/d/e/1FAIpQLSf3_BasFTXaInMtTlatKjOmEJqWMJXBemj5ISpvBOHwltM3uw/formResponse';
 
+    // Replace the following with your actual entry.X IDs
     const GOOGLE_FORM_ENTRY_IDS = {
-      walletAddress: 'entry.414551757',
-      contractAddress: 'entry.295660436',
-      tokenId: 'entry.594385145',
-      objktUrl: 'entry.1645919499',
-      twitterHandle: 'entry.1349731758',
+      walletAddress: 'entry.722511281', // Replace with actual entry ID for 'wallet address'
+      contractAddress: 'entry.783348151', // Replace with actual entry ID for 'contract address'
+      tokenId: 'entry.1070729183', // Replace with actual entry ID for 'token id'
+      objktUrl: 'entry.24015503', // Replace with actual entry ID for 'objkt url'
+      twitterHandle: 'entry.1295894614', // Replace with actual entry ID for 'x handle'
     };
 
+    // Create a new form element
     const form = document.createElement('form');
     form.action = GOOGLE_FORM_ACTION_URL;
     form.method = 'POST';
@@ -174,36 +181,27 @@ function SubmitEntry() {
 
     // Create hidden input fields for each form entry
     const fields = {
-      walletAddress: walletAddr,
-      contractAddress: contractAddr,
-      tokenId: tokenId,
-      objktUrl: objktUrl,
-      twitterHandle: twitterHandle,
+      [GOOGLE_FORM_ENTRY_IDS.walletAddress]: walletAddr,
+      [GOOGLE_FORM_ENTRY_IDS.contractAddress]: contractAddr,
+      [GOOGLE_FORM_ENTRY_IDS.tokenId]: tokenId,
+      [GOOGLE_FORM_ENTRY_IDS.objktUrl]: objktUrl,
+      [GOOGLE_FORM_ENTRY_IDS.twitterHandle]: twitterHandle,
     };
 
     for (const [key, value] of Object.entries(fields)) {
       const input = document.createElement('input');
       input.type = 'hidden';
-      input.name = GOOGLE_FORM_ENTRY_IDS[key];
+      input.name = key;
       input.value = value;
       form.appendChild(input);
     }
 
-    // Required hidden inputs for Google Forms
-    const requiredFields = {
-      'fvv': '1',
-      'partialResponse': '[]',
-      'pageHistory': '0',
-      'fbzx': Date.now().toString(),
-    };
-
-    for (const [name, value] of Object.entries(requiredFields)) {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = name;
-      input.value = value;
-      form.appendChild(input);
-    }
+    // Optional: Add a hidden field to prevent bot submissions (you can remove if not needed)
+    const hiddenInput = document.createElement('input');
+    hiddenInput.type = 'hidden';
+    hiddenInput.name = 'fvv';
+    hiddenInput.value = '1';
+    form.appendChild(hiddenInput);
 
     // Append the form to the body
     document.body.appendChild(form);
@@ -260,21 +258,9 @@ function SubmitEntry() {
 
       {/* Countdown Timer */}
       <Box sx={{ mb: 4, textAlign: 'center' }}>
-        <Typography variant="h5" gutterBottom>
-          Submission Deadline Countdown
+        <Typography variant="h6">
+          Time Left: {timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s
         </Typography>
-        <Grid container justifyContent="center" spacing={2}>
-          {['days', 'hours', 'minutes', 'seconds'].map((unit) => (
-            <Grid item key={unit}>
-              <Typography variant="h2" sx={{ color: 'red', fontWeight: 'bold' }}>
-                {timeLeft[unit] || '00'}
-              </Typography>
-              <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                {unit.charAt(0).toUpperCase() + unit.slice(1)}
-              </Typography>
-            </Grid>
-          ))}
-        </Grid>
       </Box>
 
       {/* Competition Rules and Overview */}
@@ -385,7 +371,7 @@ function SubmitEntry() {
                   required
                   value={objktUrl}
                   onChange={(e) => setObjktUrl(e.target.value)}
-                  placeholder="e.g., https://objkt.com/tokens/KT1JFbuyKULdgHi8KjbPAx5Ys8znyXe8BDpn/2"
+                  placeholder="e.g., https://objkt.com/tokens/KT1Example/1"
                 />
               </Grid>
 

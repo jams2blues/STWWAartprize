@@ -1,6 +1,6 @@
 // src/routes/SubmitEntry.js
 
-import React, { useState, useContext, useEffect, useRef } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import {
   Container,
   Typography,
@@ -28,8 +28,6 @@ function SubmitEntry() {
   const { walletAddress, Tezos } = useContext(WalletContext);
   const [timeLeft, setTimeLeft] = useState({});
   const [isDeadlinePassed, setIsDeadlinePassed] = useState(false);
-
-  const formRef = useRef(null);
 
   // Set the deadline date (Christmas Day)
   const deadline = dayjs('2024-12-25T00:00:00');
@@ -152,21 +150,80 @@ function SubmitEntry() {
       return;
     }
 
-    // Populate hidden form fields
-    document.getElementById('walletAddress').value = walletAddress;
-    document.getElementById('contractAddress').value = contractAddress;
-    document.getElementById('tokenId').value = tokenId;
-    document.getElementById('objktUrl').value = objktUrl;
-    document.getElementById('twitterHandle').value = twitterHandle;
-
-    // Submit the form
-    formRef.current.submit();
-
-    // Note: Do not show success message here, wait for iframe load
+    // Submit data to Google Form
+    submitToGoogleForm(walletAddress, contractAddress, tokenId, objktUrl, twitterHandle);
   };
 
-  const handleCaptchaChange = (value) => {
-    setCaptchaValue(value);
+  // Function to submit data to Google Form using a hidden form submission
+  const submitToGoogleForm = (walletAddr, contractAddr, tokenId, objktUrl, twitterHandle) => {
+    const GOOGLE_FORM_ACTION_URL =
+      'https://docs.google.com/forms/u/0/d/e/1FAIpQLSfeHNVem0YEMZmJEPfE2VGM0PLB1bvGFCmQQF0Sz5EoaHk5BA/formResponse';
+
+    const GOOGLE_FORM_ENTRY_IDS = {
+      walletAddress: 'entry.414551757',
+      contractAddress: 'entry.295660436',
+      tokenId: 'entry.594385145',
+      objktUrl: 'entry.1645919499',
+      twitterHandle: 'entry.1349731758',
+    };
+
+    const form = document.createElement('form');
+    form.action = GOOGLE_FORM_ACTION_URL;
+    form.method = 'POST';
+    form.target = 'hidden_iframe'; // Targeting a hidden iframe to prevent page reload
+
+    // Create hidden input fields for each form entry
+    const fields = {
+      walletAddress: walletAddr,
+      contractAddress: contractAddr,
+      tokenId: tokenId,
+      objktUrl: objktUrl,
+      twitterHandle: twitterHandle,
+    };
+
+    for (const [key, value] of Object.entries(fields)) {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = GOOGLE_FORM_ENTRY_IDS[key];
+      input.value = value;
+      form.appendChild(input);
+    }
+
+    // Required hidden inputs for Google Forms
+    const requiredFields = {
+      'fvv': '1',
+      'partialResponse': '[]',
+      'pageHistory': '0',
+      'fbzx': Date.now().toString(),
+    };
+
+    for (const [name, value] of Object.entries(requiredFields)) {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = name;
+      input.value = value;
+      form.appendChild(input);
+    }
+
+    // Append the form to the body
+    document.body.appendChild(form);
+
+    // Create a hidden iframe to submit the form without redirecting
+    let iframe = document.getElementById('hidden_iframe');
+    if (!iframe) {
+      iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.name = 'hidden_iframe';
+      iframe.id = 'hidden_iframe';
+      iframe.onload = handleIframeLoad;
+      document.body.appendChild(iframe);
+    }
+
+    // Submit the form
+    form.submit();
+
+    // Remove the form after submission
+    document.body.removeChild(form);
   };
 
   // Function to handle form submission completion
@@ -183,6 +240,10 @@ function SubmitEntry() {
     if (window.grecaptcha) {
       window.grecaptcha.reset();
     }
+  };
+
+  const handleCaptchaChange = (value) => {
+    setCaptchaValue(value);
   };
 
   return (
@@ -314,13 +375,7 @@ function SubmitEntry() {
       {/* Submission Form */}
       {walletAddress && !isDeadlinePassed && (
         <Box sx={{ mt: 4 }}>
-          <form
-            ref={formRef}
-            onSubmit={handleSubmit}
-            action="https://docs.google.com/forms/u/0/d/e/1FAIpQLSfeHNVem0YEMZmJEPfE2VGM0PLB1bvGFCmQQF0Sz5EoaHk5BA/formResponse"
-            method="POST"
-            target="hidden_iframe"
-          >
+          <form onSubmit={handleSubmit}>
             <Grid container spacing={2}>
               {/* OBJKT.com Listing URL */}
               <Grid item xs={12}>
@@ -355,19 +410,6 @@ function SubmitEntry() {
                 />
               </Grid>
 
-              {/* Hidden Form Inputs */}
-              <input type="hidden" name="entry.414551757" id="walletAddress" />
-              <input type="hidden" name="entry.295660436" id="contractAddress" />
-              <input type="hidden" name="entry.594385145" id="tokenId" />
-              <input type="hidden" name="entry.1645919499" id="objktUrl" />
-              <input type="hidden" name="entry.1349731758" id="twitterHandle" />
-
-              {/* Required hidden inputs for Google Forms */}
-              <input type="hidden" name="fvv" value="1" />
-              <input type="hidden" name="partialResponse" value="[]" />
-              <input type="hidden" name="pageHistory" value="0" />
-              <input type="hidden" name="fbzx" value={Date.now().toString()} />
-
               {/* Submit Button */}
               <Grid item xs={12}>
                 <Button variant="contained" color="primary" type="submit" fullWidth>
@@ -376,12 +418,6 @@ function SubmitEntry() {
               </Grid>
             </Grid>
           </form>
-          {/* Hidden iframe to handle form submission */}
-          <iframe
-            name="hidden_iframe"
-            style={{ display: 'none' }}
-            onLoad={handleIframeLoad}
-          ></iframe>
         </Box>
       )}
 

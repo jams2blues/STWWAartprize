@@ -3,13 +3,16 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
-import { WalletProvider } from '@tezos-contrib/react-wallet-provider';
+import { WalletProvider } from './contexts/WalletContext'; // Updated path
+import { BrowserRouter as Router } from 'react-router-dom';
 import './index.css';
 
 ReactDOM.render(
   <React.StrictMode>
-    <WalletProvider name="Save The World With Art™">
-      <App />
+    <WalletProvider>
+      <Router>
+        <App />
+      </Router>
     </WalletProvider>
   </React.StrictMode>,
   document.getElementById('root')

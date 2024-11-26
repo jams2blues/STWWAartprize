@@ -1,6 +1,6 @@
 // src/routes/SubmitEntry.js
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   Container,
   Typography,
@@ -12,38 +12,14 @@ import {
 } from '@mui/material';
 import ReCAPTCHA from 'react-google-recaptcha';
 import WalletConnectButton from '../components/WalletConnectButton';
-import { TezosToolkit } from '@taquito/taquito';
-import { BeaconWallet } from '@taquito/beacon-wallet';
+import { WalletContext } from '../contexts/WalletContext';
 
 function SubmitEntry() {
   const [objktUrl, setObjktUrl] = useState('');
   const [twitterHandle, setTwitterHandle] = useState('');
   const [captchaValue, setCaptchaValue] = useState(null);
   const [message, setMessage] = useState({ type: '', text: '' });
-  const [walletAddress, setWalletAddress] = useState(null);
-
-  // Initialize Tezos Toolkit and Wallet
-  const wallet = new BeaconWallet({
-    name: 'Save The World With Art™ Art Prize',
-    preferredNetwork: 'ghostnet', // Change to 'mainnet' when ready
-  });
-
-  const Tezos = new TezosToolkit('https://ghostnet.tezos.marigold.dev'); // Change RPC URL for mainnet
-
-  useEffect(() => {
-    const initWallet = async () => {
-      Tezos.setWalletProvider(wallet);
-      const activeAccount = await wallet.getActiveAccount();
-      if (activeAccount) {
-        setWalletAddress(activeAccount.address);
-      }
-    };
-    initWallet();
-  }, [Tezos, wallet]);
-
-  const handleWalletConnected = (address) => {
-    setWalletAddress(address);
-  };
+  const { walletAddress, Tezos } = useContext(WalletContext);
 
   const handleSubmit = async () => {
     setMessage({ type: '', text: '' });
@@ -79,7 +55,6 @@ function SubmitEntry() {
     // Verify if the contract is ZeroContract v1 or v2
     try {
       const contract = await Tezos.contract.at(contractAddress);
-      const storage = await contract.storage();
       const entrypoints = contract.entrypoints;
 
       // Function to detect contract version
@@ -116,13 +91,10 @@ function SubmitEntry() {
     // Prepare data to submit to Google Form
     const formData = new FormData();
     formData.append('entry.414551757', walletAddress); // Wallet Address
-    formData.append('entry.295660436', 'ZeroContract Address'); // Contract Address (Placeholder)
+    formData.append('entry.295660436', contractAddress); // Contract Address
     formData.append('entry.594385145', tokenId); // Token ID
     formData.append('entry.1645919499', objktUrl); // OBJKT.com Listing URL
     formData.append('entry.1349731758', twitterHandle); // Twitter Handle
-
-    // Replace 'ZeroContract Address' with actual contract address
-    formData.set('entry.295660436', 'ZeroContract Address Placeholder'); // Adjust if needed
 
     // Submit data to Google Form
     try {
@@ -249,7 +221,7 @@ function SubmitEntry() {
       )}
 
       {/* Wallet Connection */}
-      <WalletConnectButton onWalletConnected={handleWalletConnected} />
+      <WalletConnectButton />
 
       {/* Submission Form */}
       {walletAddress && (

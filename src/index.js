@@ -7,17 +7,10 @@ import theme from './theme';
 import { ThemeProvider } from '@mui/material/styles';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { WalletProvider } from './contexts/WalletContext';
-import { initThinBackend } from 'thin-backend';
-import { ThinBackend } from 'thin-backend-react';
 import './index.css'; // Include default styles
 
 import { Buffer } from 'buffer';
 import process from 'process';
-
-// Initialize Thin Backend
-initThinBackend({
-  host: process.env.REACT_APP_BACKEND_URL,
-});
 
 // Make Buffer and process available globally
 window.Buffer = Buffer;
@@ -28,11 +21,9 @@ root.render(
   <React.StrictMode>
     <ThemeProvider theme={theme}>
       <WalletProvider>
-        <ThinBackend requireLogin={false}>
-          <Router>
-            <App />
-          </Router>
-        </ThinBackend>
+        <Router>
+          <App />
+        </Router>
       </WalletProvider>
     </ThemeProvider>
   </React.StrictMode>

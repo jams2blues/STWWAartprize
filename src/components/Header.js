@@ -1,6 +1,6 @@
 // src/components/Header.js
 
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -14,11 +14,10 @@ import {
   Box,
 } from '@mui/material';
 import { Link } from 'react-router-dom';
-import { WalletContext } from '../contexts/WalletContext';
-import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import AccountCircle from '@mui/icons-material/AccountCircle';
 import MenuIcon from '@mui/icons-material/Menu';
 import { styled } from '@mui/system';
-import { useState } from 'react';
+import { auth } from '../firebase';
 
 const GradientAppBar = styled(AppBar)({
   background: 'linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet)',
@@ -30,8 +29,8 @@ const HeaderText = styled(Typography)({
 });
 
 const Header = () => {
-  const { walletAddress, connectWallet, disconnectWallet } = useContext(WalletContext);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const user = auth.currentUser;
 
   const toggleDrawer = (open) => () => {
     setDrawerOpen(open);
@@ -69,23 +68,24 @@ const Header = () => {
                 {link.title}
               </Button>
             ))}
-            {!walletAddress ? (
+            {user ? (
               <Button
                 color="inherit"
-                onClick={connectWallet}
-                startIcon={<AccountBalanceWalletIcon />}
+                onClick={() => auth.signOut()}
+                startIcon={<AccountCircle />}
                 sx={{ ml: 2 }}
               >
-                Connect Wallet
+                Logout ({user.email})
               </Button>
             ) : (
               <Button
                 color="inherit"
-                onClick={disconnectWallet}
-                startIcon={<AccountBalanceWalletIcon />}
+                component={Link}
+                to="/"
+                startIcon={<AccountCircle />}
                 sx={{ ml: 2 }}
               >
-                Disconnect ({walletAddress.substring(0, 6)}...{walletAddress.slice(-4)})
+                Login
               </Button>
             )}
           </Box>
@@ -101,15 +101,15 @@ const Header = () => {
                 <ListItemText primary={link.title} />
               </ListItem>
             ))}
-            {!walletAddress ? (
-              <ListItem button onClick={connectWallet}>
-                <AccountBalanceWalletIcon sx={{ mr: 2 }} />
-                <ListItemText primary="Connect Wallet" />
+            {user ? (
+              <ListItem button onClick={() => auth.signOut()}>
+                <AccountCircle sx={{ mr: 2 }} />
+                <ListItemText primary={`Logout (${user.email})`} />
               </ListItem>
             ) : (
-              <ListItem button onClick={disconnectWallet}>
-                <AccountBalanceWalletIcon sx={{ mr: 2 }} />
-                <ListItemText primary={`Disconnect (${walletAddress.substring(0, 6)}...${walletAddress.slice(-4)})`} />
+              <ListItem button component={Link} to="/">
+                <AccountCircle sx={{ mr: 2 }} />
+                <ListItemText primary="Login" />
               </ListItem>
             )}
           </List>

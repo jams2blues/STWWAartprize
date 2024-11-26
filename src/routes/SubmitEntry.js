@@ -1,6 +1,6 @@
 // src/routes/SubmitEntry.js
 
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect, useRef } from 'react';
 import {
   Container,
   Typography,
@@ -14,7 +14,6 @@ import {
 import ReCAPTCHA from 'react-google-recaptcha';
 import WalletConnectButton from '../components/WalletConnectButton';
 import { WalletContext } from '../contexts/WalletContext';
-import axios from 'axios';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 
@@ -28,6 +27,8 @@ function SubmitEntry() {
   const { walletAddress, Tezos } = useContext(WalletContext);
   const [timeLeft, setTimeLeft] = useState({});
   const [isDeadlinePassed, setIsDeadlinePassed] = useState(false);
+
+  const formRef = useRef(null);
 
   // Set the deadline date (Christmas Day)
   const deadline = dayjs('2024-12-25T00:00:00');
@@ -50,7 +51,7 @@ function SubmitEntry() {
       } else {
         const durationObj = dayjs.duration(diff);
         setTimeLeft({
-          days: String(durationObj.days()).padStart(2, '0'),
+          days: String(durationObj.asDays().toFixed(0)).padStart(2, '0'),
           hours: String(durationObj.hours()).padStart(2, '0'),
           minutes: String(durationObj.minutes()).padStart(2, '0'),
           seconds: String(durationObj.seconds()).padStart(2, '0'),
@@ -61,7 +62,8 @@ function SubmitEntry() {
     return () => clearInterval(interval);
   }, [deadline]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setMessage({ type: '', text: '' });
 
     // Check if the deadline has passed
@@ -83,20 +85,6 @@ function SubmitEntry() {
 
     if (!captchaValue) {
       setMessage({ type: 'error', text: 'Please complete the reCAPTCHA.' });
-      return;
-    }
-
-    // Send reCAPTCHA token to your API for verification
-    try {
-      const captchaResponse = await axios.post('/api/verifyCaptcha', { token: captchaValue });
-
-      if (!captchaResponse.data.success) {
-        setMessage({ type: 'error', text: 'reCAPTCHA verification failed. Please try again.' });
-        return;
-      }
-    } catch (error) {
-      console.error('reCAPTCHA verification error:', error);
-      setMessage({ type: 'error', text: 'reCAPTCHA verification error. Please try again.' });
       return;
     }
 
@@ -148,31 +136,27 @@ function SubmitEntry() {
       return;
     }
 
-    // Prepare data to submit to the server-side API
-    const formData = {
-      walletAddress,
-      contractAddress,
-      tokenId,
-      objktUrl,
-      twitterHandle,
-    };
+    // Prepare data to submit to Google Form
+    // Set the values of the hidden form inputs
+    document.getElementById('walletAddress').value = walletAddress;
+    document.getElementById('contractAddress').value = contractAddress;
+    document.getElementById('tokenId').value = tokenId;
+    document.getElementById('objktUrl').value = objktUrl;
+    document.getElementById('twitterHandle').value = twitterHandle;
 
-    // Submit data to the server-side API
-    try {
-      const response = await axios.post('/api/submitEntry', formData);
+    // Submit the form
+    formRef.current.submit();
 
-      if (response.data.success) {
-        setMessage({ type: 'success', text: 'Your entry has been submitted successfully!' });
-        // Reset form fields
-        setObjktUrl('');
-        setTwitterHandle('');
-        setCaptchaValue(null);
-      } else {
-        setMessage({ type: 'error', text: 'An error occurred while submitting your entry.' });
-      }
-    } catch (error) {
-      console.error('Submission error:', error);
-      setMessage({ type: 'error', text: 'An error occurred while submitting your entry.' });
+    // Show success message
+    setMessage({ type: 'success', text: 'Your entry has been submitted successfully!' });
+
+    // Reset form fields
+    setObjktUrl('');
+    setTwitterHandle('');
+    setCaptchaValue(null);
+    // Reset reCAPTCHA
+    if (window.grecaptcha) {
+      window.grecaptcha.reset();
     }
   };
 
@@ -198,7 +182,7 @@ function SubmitEntry() {
           Submission Deadline Countdown
         </Typography>
         <Grid container justifyContent="center" spacing={2}>
-          {['days', 'hours', 'minutes', 'seconds'].map((unit, index) => (
+          {['days', 'hours', 'minutes', 'seconds'].map((unit) => (
             <Grid item key={unit}>
               <Typography variant="h2" sx={{ color: 'red', fontWeight: 'bold' }}>
                 {timeLeft[unit] || '00'}
@@ -213,12 +197,7 @@ function SubmitEntry() {
 
       {/* Competition Rules and Overview */}
       <Box sx={{ mb: 4 }}>
-        <Typography variant="h6" gutterBottom>
-          RULES and ENTRY Guide
-        </Typography>
-        {/* [Include the same competition rules content here as before] */}
-        {/* ... */}
-        {/* For brevity, I'm not repeating the rules here, but they should be included as before */}
+        {/* Include your competition rules here */}
       </Box>
 
       {/* Display messages */}
@@ -234,40 +213,62 @@ function SubmitEntry() {
       {/* Submission Form */}
       {walletAddress && !isDeadlinePassed && (
         <Box sx={{ mt: 4 }}>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <TextField
-                label="OBJKT.com Listing URL"
-                fullWidth
-                required
-                value={objktUrl}
-                onChange={(e) => setObjktUrl(e.target.value)}
-                placeholder="e.g., https://objkt.com/tokens/KT1JFbuyKULdgHi8KjbPAx5Ys8znyXe8BDpn/2"
-              />
+          <form
+            ref={formRef}
+            onSubmit={handleSubmit}
+            action="https://docs.google.com/forms/u/0/d/e/1FAIpQLSfeHNVem0YEMZmJEPfE2VGM0PLB1bvGFCmQQF0Sz5EoaHk5BA/formResponse"
+            method="POST"
+            target="hidden_iframe"
+          >
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <TextField
+                  label="OBJKT.com Listing URL"
+                  fullWidth
+                  required
+                  value={objktUrl}
+                  onChange={(e) => setObjktUrl(e.target.value)}
+                  placeholder="e.g., https://objkt.com/tokens/KT1JFbuyKULdgHi8KjbPAx5Ys8znyXe8BDpn/2"
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  label="X (Twitter) Handle"
+                  fullWidth
+                  required
+                  value={twitterHandle}
+                  onChange={(e) => setTwitterHandle(e.target.value)}
+                  placeholder="@yourhandle"
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <ReCAPTCHA
+                  sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}
+                  onChange={handleCaptchaChange}
+                  theme="light"
+                />
+              </Grid>
+
+              {/* Hidden Form Inputs */}
+              <input type="hidden" name="entry.414551757" id="walletAddress" />
+              <input type="hidden" name="entry.295660436" id="contractAddress" />
+              <input type="hidden" name="entry.594385145" id="tokenId" />
+              <input type="hidden" name="entry.1645919499" id="objktUrl" />
+              <input type="hidden" name="entry.1349731758" id="twitterHandle" />
+              {/* Required hidden inputs for Google Forms */}
+              <input type="hidden" name="fvv" value="1" />
+              <input type="hidden" name="draftResponse" value="[]" />
+              <input type="hidden" name="pageHistory" value="0" />
+              <input type="hidden" name="fbzx" value="1234567890" />
+              <Grid item xs={12}>
+                <Button variant="contained" color="primary" type="submit" fullWidth>
+                  Submit Entry
+                </Button>
+              </Grid>
             </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="X (Twitter) Handle"
-                fullWidth
-                required
-                value={twitterHandle}
-                onChange={(e) => setTwitterHandle(e.target.value)}
-                placeholder="@yourhandle"
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <ReCAPTCHA
-                sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}
-                onChange={handleCaptchaChange}
-                theme="light"
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <Button variant="contained" color="primary" onClick={handleSubmit} fullWidth>
-                Submit Entry
-              </Button>
-            </Grid>
-          </Grid>
+          </form>
+          {/* Invisible iframe to handle form submission */}
+          <iframe name="hidden_iframe" style={{ display: 'none' }}></iframe>
         </Box>
       )}
 

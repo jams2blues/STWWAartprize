@@ -3,26 +3,30 @@
 import { createRecord, query, updateRecord } from 'thin-backend';
 
 export const submitEntry = async (walletAddress, contractAddress, tokenId) => {
-  // Check if the user has already submitted an entry
-  const existingEntry = await query('entries').where('walletAddress', walletAddress).fetchOne();
+  // Check if the token has already been submitted
+  const existingEntry = await query('entries')
+    .where('contract_address', contractAddress)
+    .where('token_id', tokenId)
+    .fetchOne();
 
   if (existingEntry) {
-    throw new Error('You have already submitted an entry.');
+    throw new Error('This token has already been submitted.');
   }
 
   // Save the entry
   await createRecord('entries', {
-    walletAddress,
-    contractAddress,
-    tokenId,
+    wallet_address: walletAddress,
+    contract_address: contractAddress,
+    token_id: tokenId,
     votes: 0,
-    createdAt: new Date(),
   });
 };
 
 export const recordVote = async (walletAddress, entryId) => {
   // Check if the user has already voted
-  const existingVote = await query('votes').where('walletAddress', walletAddress).fetchOne();
+  const existingVote = await query('votes')
+    .where('wallet_address', walletAddress)
+    .fetchOne();
 
   if (existingVote) {
     throw new Error('You have already voted.');
@@ -30,12 +34,11 @@ export const recordVote = async (walletAddress, entryId) => {
 
   // Record the vote
   await createRecord('votes', {
-    walletAddress,
-    entryId,
-    createdAt: new Date(),
+    wallet_address: walletAddress,
+    entry_id: entryId,
   });
 
-  // Increment the vote count atomically
+  // Increment the vote count
   const entry = await query('entries').findById(entryId);
   if (!entry) {
     throw new Error('Entry not found.');

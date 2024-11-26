@@ -1,0 +1,36 @@
+-- Create the 'entries' table
+CREATE TABLE entries (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY NOT NULL,
+    wallet_address TEXT NOT NULL,
+    contract_address TEXT NOT NULL,
+    token_id TEXT NOT NULL,
+    votes INT DEFAULT 0 NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+);
+-- Enable Row Level Security for 'entries' table
+ALTER TABLE entries ENABLE ROW LEVEL SECURITY;
+-- Policy: Allow anyone to read entries
+CREATE POLICY "Entries Public Select" ON entries FOR SELECT USING (true);
+-- Policy: Allow users to insert entries
+CREATE POLICY "Entries Insert" ON entries FOR INSERT WITH CHECK (true);
+-- Policy: Allow users to update 'votes' column only
+CREATE POLICY "Entries Update Votes" ON entries FOR UPDATE USING (true) WITH CHECK (true);
+-- Create the 'votes' table
+CREATE TABLE votes (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY NOT NULL,
+    wallet_address TEXT NOT NULL,
+    entry_id UUID NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+);
+-- Foreign key constraint for 'entry_id' referencing 'entries(id)'
+ALTER TABLE votes ADD CONSTRAINT votes_entry_id_fkey FOREIGN KEY (entry_id) REFERENCES entries (id) ON DELETE CASCADE;
+-- Enable Row Level Security for 'votes' table
+ALTER TABLE votes ENABLE ROW LEVEL SECURITY;
+-- Policy: Allow anyone to read votes
+CREATE POLICY "Votes Public Select" ON votes FOR SELECT USING (true);
+-- Policy: Allow users to insert votes
+CREATE POLICY "Votes Insert" ON votes FOR INSERT WITH CHECK (true);
+-- Policy: Prevent users from updating votes
+CREATE POLICY "Votes No Update" ON votes FOR UPDATE USING (false);
+-- Policy: Prevent users from deleting votes
+CREATE POLICY "Votes No Delete" ON votes FOR DELETE USING (false);

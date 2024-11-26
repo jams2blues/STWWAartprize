@@ -15,7 +15,9 @@ import { Buffer } from 'buffer';
 import process from 'process';
 
 // Initialize Thin Backend
-initThinBackend({ host: process.env.REACT_APP_BACKEND_URL });
+initThinBackend({
+  host: process.env.REACT_APP_BACKEND_URL,
+});
 
 // Make Buffer and process available globally
 window.Buffer = Buffer;
@@ -26,7 +28,7 @@ root.render(
   <React.StrictMode>
     <ThemeProvider theme={theme}>
       <WalletProvider>
-        <ThinBackend>
+        <ThinBackend requireLogin={false}>
           <Router>
             <App />
           </Router>
@@ -35,4 +37,3 @@ root.render(
     </ThemeProvider>
   </React.StrictMode>
 );
-

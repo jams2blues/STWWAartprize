@@ -1,6 +1,6 @@
 // src/routes/SubmitEntry.js
 
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import {
   Container,
   Typography,
@@ -11,8 +11,15 @@ import {
   CircularProgress,
   Grid,
 } from '@mui/material';
-import { db } from '../firebase';
-import { collection, addDoc, query, where, getDocs, serverTimestamp } from 'firebase/firestore';
+import { db, auth } from '../firebase';
+import {
+  collection,
+  addDoc,
+  query,
+  where,
+  getDocs,
+  serverTimestamp,
+} from 'firebase/firestore';
 import ReCAPTCHA from 'react-google-recaptcha';
 
 const SubmitEntry = () => {

@@ -2,7 +2,7 @@
 
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, TwitterAuthProvider } from "firebase/auth";
 
 // Firebase configuration using environment variables
 const firebaseConfig = {
@@ -24,4 +24,8 @@ const db = getFirestore(app);
 // Initialize Authentication
 const auth = getAuth(app);
 
-export { db, auth };
+// Initialize Providers
+const googleProvider = new GoogleAuthProvider();
+const twitterProvider = new TwitterAuthProvider();
+
+export { db, auth, googleProvider, twitterProvider };

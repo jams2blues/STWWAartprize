@@ -22,7 +22,6 @@ import {
   where,
   updateDoc,
   doc,
-  getDoc,
 } from 'firebase/firestore';
 import ReCAPTCHA from 'react-google-recaptcha';
 
@@ -92,8 +91,9 @@ const VotingGallery = () => {
 
         // Increment vote count
         const entryRef = doc(db, 'entries', entryId);
+        const newVotes = (entries.find((entry) => entry.id === entryId).votes || 0) + 1;
         await updateDoc(entryRef, {
-          votes: (entries.find((entry) => entry.id === entryId).votes || 0) + 1,
+          votes: newVotes,
         });
 
         setVotedEntryId(entryId);
@@ -116,14 +116,16 @@ const VotingGallery = () => {
 
         // Decrement previous entry's vote count
         const prevEntryRef = doc(db, 'entries', previousEntryId);
+        const prevVotes = (entries.find((entry) => entry.id === previousEntryId).votes || 1) - 1;
         await updateDoc(prevEntryRef, {
-          votes: (entries.find((entry) => entry.id === previousEntryId).votes || 1) - 1,
+          votes: prevVotes,
         });
 
         // Increment new entry's vote count
         const newEntryRef = doc(db, 'entries', entryId);
+        const newVotes = (entries.find((entry) => entry.id === entryId).votes || 0) + 1;
         await updateDoc(newEntryRef, {
-          votes: (entries.find((entry) => entry.id === entryId).votes || 0) + 1,
+          votes: newVotes,
         });
 
         setVotedEntryId(entryId);

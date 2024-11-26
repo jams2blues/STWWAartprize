@@ -8,8 +8,6 @@ import {
   Card,
   CardMedia,
   CardContent,
-  Alert,
-  CircularProgress,
 } from '@mui/material';
 import { db } from '../firebase';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';

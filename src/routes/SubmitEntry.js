@@ -14,9 +14,9 @@ import {
 import ReCAPTCHA from 'react-google-recaptcha';
 import WalletConnectButton from '../components/WalletConnectButton';
 import { WalletContext } from '../contexts/WalletContext';
-import axios from 'axios';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
+import axios from 'axios';
 
 dayjs.extend(duration);
 
@@ -63,6 +63,7 @@ function SubmitEntry() {
     return () => clearInterval(interval);
   }, [deadline]);
 
+  // Handle Form Submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage({ type: '', text: '' });
@@ -315,6 +316,7 @@ function SubmitEntry() {
             target="hidden_iframe"
           >
             <Grid container spacing={2}>
+              {/* OBJKT.com Listing URL */}
               <Grid item xs={12}>
                 <TextField
                   label="OBJKT.com Listing URL"
@@ -325,6 +327,8 @@ function SubmitEntry() {
                   placeholder="e.g., https://objkt.com/tokens/KT1JFbuyKULdgHi8KjbPAx5Ys8znyXe8BDpn/2"
                 />
               </Grid>
+
+              {/* X (Twitter) Handle */}
               <Grid item xs={12}>
                 <TextField
                   label="X (Twitter) Handle"
@@ -335,6 +339,8 @@ function SubmitEntry() {
                   placeholder="@yourhandle"
                 />
               </Grid>
+
+              {/* reCAPTCHA */}
               <Grid item xs={12}>
                 <ReCAPTCHA
                   sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}
@@ -348,13 +354,15 @@ function SubmitEntry() {
               <input type="hidden" name="entry.295660436" id="contractAddress" />
               <input type="hidden" name="entry.594385145" id="tokenId" />
               <input type="hidden" name="entry.1645919499" id="objktUrl" />
-              <input type="hidden" name="entry.1349731758" id="twitterHandle" />
+              <input type="hidden" name="entry.1349731758:" id="twitterHandle" /> {/* Note the colon */}
+
               {/* Required hidden inputs for Google Forms */}
               <input type="hidden" name="fvv" value="1" />
               <input type="hidden" name="draftResponse" value="[]" />
               <input type="hidden" name="pageHistory" value="0" />
               <input type="hidden" name="fbzx" value={Date.now()} />
 
+              {/* Submit Button */}
               <Grid item xs={12}>
                 <Button variant="contained" color="primary" type="submit" fullWidth>
                   Submit Entry

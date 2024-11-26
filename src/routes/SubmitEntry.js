@@ -354,7 +354,7 @@ function SubmitEntry() {
               <input type="hidden" name="entry.295660436" id="contractAddress" />
               <input type="hidden" name="entry.594385145" id="tokenId" />
               <input type="hidden" name="entry.1645919499" id="objktUrl" />
-              <input type="hidden" name="entry.1349731758:" id="twitterHandle" /> {/* Note the colon */}
+              <input type="hidden" name="entry.1349731758" id="twitterHandle" />
 
               {/* Required hidden inputs for Google Forms */}
               <input type="hidden" name="fvv" value="1" />

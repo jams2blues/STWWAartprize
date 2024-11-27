@@ -267,7 +267,7 @@ function SubmitEntry() {
           <li>
             <Typography variant="body1" paragraph>
               After submitting your artwork, make an <strong>X (Twitter)</strong> post showing off your on-chain art skills using our{' '}
-              <MuiLink href="#" target="_blank" rel="noopener noreferrer">
+              <MuiLink href="https://x.com/jams2blues/status/1861608972374905237" target="_blank" rel="noopener noreferrer">
                 #STWWAprize
               </MuiLink>{' '}
               tag, and tag{' '}

@@ -211,7 +211,7 @@ function SubmitEntry() {
       {/* Countdown Timer */}
       <Box sx={{ mb: 4, textAlign: 'center' }}>
         <Typography variant="h6" sx={{ color: 'red' }}>
-          Time Left: {timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s
+          Time Left to enter: {timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s
         </Typography>
       </Box>
 

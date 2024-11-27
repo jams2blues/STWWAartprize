@@ -93,6 +93,8 @@ function SubmitEntry() {
       ? `https://x.com/${twitterHandle.substring(1)}`
       : `https://x.com/${twitterHandle}`;
 
+    console.log('Formatted Twitter Handle:', formattedTwitterHandle);
+
     // Send reCAPTCHA token to your API for verification
     try {
       console.log('Verifying reCAPTCHA token...');
@@ -121,9 +123,9 @@ function SubmitEntry() {
 
     // Replace the following with your actual entry.X IDs
     const GOOGLE_FORM_ENTRY_IDS = {
-      walletAddress: 'entry.722511281',   // Replace with actual entry ID for 'wallet address'
-      objktUrl: 'entry.24015503',        // Replace with actual entry ID for 'objkt url'
-      twitterHandle: 'entry.1295894614', // Replace with actual entry ID for 'x handle'
+      walletAddress: 'entry.123456789',   // Replace with actual entry ID for 'wallet address'
+      objktUrl: 'entry.987654321',        // Replace with actual entry ID for 'objkt url'
+      twitterHandle: 'entry.192837465',   // Replace with actual entry ID for 'x handle'
     };
 
     // Log the data being submitted
@@ -138,7 +140,7 @@ function SubmitEntry() {
     const form = document.createElement('form');
     form.action = GOOGLE_FORM_ACTION_URL;
     form.method = 'POST';
-    form.target = 'hidden_iframe'; // Targeting a hidden iframe to prevent page reload
+    form.target = 'hidden_iframe'; // Change to '_blank' for debugging if needed
 
     // Create hidden input fields for each form entry
     const fields = {

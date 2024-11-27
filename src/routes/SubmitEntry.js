@@ -95,7 +95,10 @@ function SubmitEntry() {
 
     // Send reCAPTCHA token to your API for verification
     try {
+      console.log('Verifying reCAPTCHA token...');
       const captchaResponse = await axios.post('/api/verifyCaptcha', { token: captchaValue });
+
+      console.log('reCAPTCHA response:', captchaResponse.data);
 
       if (!captchaResponse.data.success) {
         setMessage({ type: 'error', text: 'reCAPTCHA verification failed. Please try again.' });
@@ -118,10 +121,18 @@ function SubmitEntry() {
 
     // Replace the following with your actual entry.X IDs
     const GOOGLE_FORM_ENTRY_IDS = {
-      walletAddress: 'entry.722511281',      // Replace with actual entry ID for 'wallet address'
-      objktUrl: 'entry.24015503',           // Replace with actual entry ID for 'objkt url'
-      twitterHandle: 'entry.1295894614',    // Replace with actual entry ID for 'x handle'
+      walletAddress: 'entry.722511281',   // Replace with actual entry ID for 'wallet address'
+      objktUrl: 'entry.24015503',        // Replace with actual entry ID for 'objkt url'
+      twitterHandle: 'entry.1295894614', // Replace with actual entry ID for 'x handle'
     };
+
+    // Log the data being submitted
+    console.log('Submitting to Google Form with the following data:');
+    console.log({
+      walletAddress: walletAddr,
+      objktUrl: objktUrl,
+      twitterHandle: twitterHandle,
+    });
 
     // Create a new form element
     const form = document.createElement('form');
@@ -154,6 +165,9 @@ function SubmitEntry() {
     // Append the form to the body
     document.body.appendChild(form);
 
+    // Log the form's innerHTML for debugging
+    console.log('Generated form:', form.innerHTML);
+
     // Create a hidden iframe to submit the form without redirecting
     let iframe = document.getElementById('hidden_iframe');
     if (!iframe) {
@@ -163,17 +177,24 @@ function SubmitEntry() {
       iframe.id = 'hidden_iframe';
       iframe.onload = handleIframeLoad;
       document.body.appendChild(iframe);
+      console.log('Created hidden iframe for form submission.');
+    } else {
+      console.log('Using existing hidden iframe for form submission.');
     }
 
     // Submit the form
+    console.log('Submitting form...');
     form.submit();
 
     // Remove the form after submission
     document.body.removeChild(form);
+    console.log('Form submitted and removed from the DOM.');
   };
 
   // Function to handle form submission completion
   const handleIframeLoad = () => {
+    console.log('Form submission completed (iframe loaded).');
+
     // Show success message if submission is successful
     setMessage({ type: 'success', text: 'Your entry has been submitted successfully!' });
 
@@ -189,6 +210,7 @@ function SubmitEntry() {
   };
 
   const handleCaptchaChange = (value) => {
+    console.log('reCAPTCHA value changed:', value);
     setCaptchaValue(value);
   };
 

@@ -17,8 +17,6 @@ import { WalletContext } from '../contexts/WalletContext';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 import axios from 'axios';
-import { TezosToolkit } from '@taquito/taquito'; // Import Taquito
-import { tzip12 } from '@taquito/tzip12'; // Import TZIP-12 for metadata access
 
 dayjs.extend(duration);
 
@@ -31,10 +29,6 @@ function SubmitEntry() {
   const [timeLeft, setTimeLeft] = useState({});
   const [isDeadlinePassed, setIsDeadlinePassed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Initialize Taquito Tezos Toolkit
-  const Tezos = new TezosToolkit('https://mainnet.api.tez.ie'); // You can use your preferred RPC node
-  Tezos.addExtension(new tzip12()); // Add TZIP-12 extension for metadata
 
   // Set the deadline date (Christmas Day)
   const deadline = dayjs('2024-12-25T00:00:00');
@@ -67,40 +61,6 @@ function SubmitEntry() {
 
     return () => clearInterval(interval);
   }, [deadline]);
-
-  // Function to extract contract address from OBJKT.com URL
-  const extractContractAddress = (url) => {
-    try {
-      const urlObj = new URL(url);
-      const pathname = urlObj.pathname; // e.g., /tokens/KT1.../3
-      const parts = pathname.split('/');
-      if (parts.length >= 3) {
-        return parts[2]; // KT1... part
-      }
-      return null;
-    } catch (error) {
-      return null;
-    }
-  };
-
-  // Function to detect contract version based on entrypoints
-  const detectContractVersion = (entrypoints) => {
-    const v2UniqueEntrypoints = [
-      'add_child',
-      'add_parent',
-      'remove_child',
-      'remove_parent',
-    ];
-
-    // Extract all entrypoint names and convert to lowercase for case-insensitive comparison
-    const entrypointNames = Object.keys(entrypoints).map(ep => ep.toLowerCase());
-
-    // Identify which unique v2 entrypoints are present
-    const v2EntrypointsPresent = v2UniqueEntrypoints.filter(ep => entrypointNames.includes(ep));
-
-    // Determine contract version based on the presence of unique v2 entrypoints
-    return v2EntrypointsPresent.length >= 2 ? 'v2' : 'v1';
-  };
 
   // Handle Form Submission
   const handleSubmit = async (e) => {
@@ -137,29 +97,6 @@ function SubmitEntry() {
     setIsSubmitting(true);
 
     try {
-      // Extract contract address from OBJKT.com URL
-      const contractAddress = extractContractAddress(objktUrl);
-      if (!contractAddress) {
-        setMessage({ type: 'error', text: 'Invalid OBJKT.com listing URL format.' });
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Fetch contract and entrypoints
-      const contract = await Tezos.contract.at(contractAddress);
-      const entrypoints = contract.entrypoints;
-
-      // Detect contract version
-      const contractVersion = detectContractVersion(entrypoints);
-      if (contractVersion !== 'v1' && contractVersion !== 'v2') {
-        setMessage({ type: 'error', text: 'Only v1 or v2 ZeroContract NFTs are allowed.' });
-        setIsSubmitting(false);
-        return;
-      }
-
-      // (Optional) Fetch additional metadata if needed
-      // const metadata = await contract.tzip12().getMetadata();
-
       // Send reCAPTCHA token to your API for verification
       const captchaResponse = await axios.post('/api/verifyCaptcha', { token: captchaValue });
 
@@ -229,7 +166,7 @@ function SubmitEntry() {
       // Append the form to the body
       document.body.appendChild(form);
 
-      // Create a hidden iframe to submit the form without redirecting
+      // Create a hidden iframe if it doesn't exist
       let iframe = document.getElementById('hidden_iframe');
       if (!iframe) {
         iframe = document.createElement('iframe');
@@ -237,7 +174,8 @@ function SubmitEntry() {
         iframe.name = 'hidden_iframe';
         iframe.id = 'hidden_iframe';
         iframe.onload = () => {
-          // Assume success if iframe loads without errors
+          // Check if the submission was successful
+          // Google Forms doesn't provide a response, so we'll assume success
           resolve();
         };
         document.body.appendChild(iframe);

@@ -10,6 +10,7 @@
     "@mui/material": "^6.1.8",
     "@taquito/beacon-wallet": "^20.1.0",
     "@taquito/taquito": "^20.1.0",
+    "@taquito/tzip12": "^20.1.0",
     "@taquito/utils": "^20.1.0",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",

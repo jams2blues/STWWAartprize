@@ -123,9 +123,9 @@ function SubmitEntry() {
 
     // Replace the following with your actual entry.X IDs
     const GOOGLE_FORM_ENTRY_IDS = {
-      walletAddress: 'entry.123456789',   // Replace with actual entry ID for 'wallet address'
-      objktUrl: 'entry.987654321',        // Replace with actual entry ID for 'objkt url'
-      twitterHandle: 'entry.192837465',   // Replace with actual entry ID for 'x handle'
+      walletAddress: 'entry.1911590716',   // Replace with actual entry ID for 'wallet address'
+      objktUrl: 'entry.932123603',        // Replace with actual entry ID for 'objkt url'
+      twitterHandle: 'entry.551018139',   // Replace with actual entry ID for 'x handle'
     };
 
     // Log the data being submitted

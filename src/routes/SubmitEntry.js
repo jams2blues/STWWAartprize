@@ -28,6 +28,7 @@ function SubmitEntry() {
   const { walletAddress } = useContext(WalletContext);
   const [timeLeft, setTimeLeft] = useState({});
   const [isDeadlinePassed, setIsDeadlinePassed] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Set the deadline date (Christmas Day)
   const deadline = dayjs('2024-12-25T00:00:00');
@@ -93,126 +94,105 @@ function SubmitEntry() {
       ? `https://x.com/${twitterHandle.substring(1)}`
       : `https://x.com/${twitterHandle}`;
 
-    console.log('Formatted Twitter Handle:', formattedTwitterHandle);
+    setIsSubmitting(true);
 
-    // Send reCAPTCHA token to your API for verification
     try {
-      console.log('Verifying reCAPTCHA token...');
+      // Send reCAPTCHA token to your API for verification
       const captchaResponse = await axios.post('/api/verifyCaptcha', { token: captchaValue });
-
-      console.log('reCAPTCHA response:', captchaResponse.data);
 
       if (!captchaResponse.data.success) {
         setMessage({ type: 'error', text: 'reCAPTCHA verification failed. Please try again.' });
+        setIsSubmitting(false);
         return;
       }
-    } catch (error) {
-      console.error('reCAPTCHA verification error:', error);
-      setMessage({ type: 'error', text: 'reCAPTCHA verification error. Please try again.' });
-      return;
-    }
 
-    // Submit data to Google Form
-    submitToGoogleForm(walletAddress, objktUrl, formattedTwitterHandle);
+      // Submit data to Google Form
+      await submitToGoogleForm(walletAddress, objktUrl, formattedTwitterHandle);
+
+      // Show success message
+      setMessage({ type: 'success', text: 'Your entry has been submitted successfully!' });
+
+      // Reset form fields
+      setObjktUrl('');
+      setTwitterHandle('');
+      setCaptchaValue(null);
+
+      // Reset reCAPTCHA
+      if (window.grecaptcha) {
+        window.grecaptcha.reset();
+      }
+    } catch (error) {
+      console.error('Submission error:', error);
+      setMessage({ type: 'error', text: 'Submission failed. Please try again later.' });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Function to submit data to Google Form using a hidden form submission
   const submitToGoogleForm = (walletAddr, objktUrl, twitterHandle) => {
-    const GOOGLE_FORM_ACTION_URL =
-      'https://docs.google.com/forms/d/e/1FAIpQLSf3_BasFTXaInMtTlatKjOmEJqWMJXBemj5ISpvBOHwltM3uw/formResponse';
+    return new Promise((resolve, reject) => {
+      const GOOGLE_FORM_ACTION_URL =
+        'https://docs.google.com/forms/d/e/1FAIpQLSf3_BasFTXaInMtTlatKjOmEJqWMJXBemj5ISpvBOHwltM3uw/formResponse';
 
-    // Replace the following with your actual entry.X IDs
-    const GOOGLE_FORM_ENTRY_IDS = {
-      walletAddress: 'entry.1911590716',   // Replace with actual entry ID for 'wallet address'
-      objktUrl: 'entry.932123603',        // Replace with actual entry ID for 'objkt url'
-      twitterHandle: 'entry.551018139',   // Replace with actual entry ID for 'x handle'
-    };
+      // Your accurate entry.X IDs
+      const GOOGLE_FORM_ENTRY_IDS = {
+        walletAddress: 'entry.1911590716',   // Replace with actual entry ID for 'wallet address'
+        objktUrl: 'entry.932123603',        // Replace with actual entry ID for 'objkt url'
+        twitterHandle: 'entry.551018139',   // Replace with actual entry ID for 'x handle'
+      };
 
-    // Log the data being submitted
-    console.log('Submitting to Google Form with the following data:');
-    console.log({
-      walletAddress: walletAddr,
-      objktUrl: objktUrl,
-      twitterHandle: twitterHandle,
+      // Create a new form element
+      const form = document.createElement('form');
+      form.action = GOOGLE_FORM_ACTION_URL;
+      form.method = 'POST';
+      form.target = 'hidden_iframe';
+
+      // Create hidden input fields for each form entry
+      const fields = {
+        [GOOGLE_FORM_ENTRY_IDS.walletAddress]: walletAddr,
+        [GOOGLE_FORM_ENTRY_IDS.objktUrl]: objktUrl,
+        [GOOGLE_FORM_ENTRY_IDS.twitterHandle]: twitterHandle,
+      };
+
+      for (const [key, value] of Object.entries(fields)) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = value;
+        form.appendChild(input);
+      }
+
+      // Append the form to the body
+      document.body.appendChild(form);
+
+      // Create a hidden iframe if it doesn't exist
+      let iframe = document.getElementById('hidden_iframe');
+      if (!iframe) {
+        iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.name = 'hidden_iframe';
+        iframe.id = 'hidden_iframe';
+        iframe.onload = () => {
+          // Check if the submission was successful
+          // Google Forms doesn't provide a response, so we'll assume success
+          resolve();
+        };
+        document.body.appendChild(iframe);
+      }
+
+      // Submit the form
+      form.submit();
+
+      // Remove the form after submission
+      setTimeout(() => {
+        document.body.removeChild(form);
+        resolve();
+      }, 1000);
     });
-
-    // Create a new form element
-    const form = document.createElement('form');
-    form.action = GOOGLE_FORM_ACTION_URL;
-    form.method = 'POST';
-    form.target = 'hidden_iframe'; // Change to '_blank' for debugging if needed
-
-    // Create hidden input fields for each form entry
-    const fields = {
-      [GOOGLE_FORM_ENTRY_IDS.walletAddress]: walletAddr,
-      [GOOGLE_FORM_ENTRY_IDS.objktUrl]: objktUrl,
-      [GOOGLE_FORM_ENTRY_IDS.twitterHandle]: twitterHandle,
-    };
-
-    for (const [key, value] of Object.entries(fields)) {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = key;
-      input.value = value;
-      form.appendChild(input);
-    }
-
-    // Optional: Add a hidden field to prevent bot submissions (you can remove if not needed)
-    const hiddenInput = document.createElement('input');
-    hiddenInput.type = 'hidden';
-    hiddenInput.name = 'fvv';
-    hiddenInput.value = '1';
-    form.appendChild(hiddenInput);
-
-    // Append the form to the body
-    document.body.appendChild(form);
-
-    // Log the form's innerHTML for debugging
-    console.log('Generated form:', form.innerHTML);
-
-    // Create a hidden iframe to submit the form without redirecting
-    let iframe = document.getElementById('hidden_iframe');
-    if (!iframe) {
-      iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
-      iframe.name = 'hidden_iframe';
-      iframe.id = 'hidden_iframe';
-      iframe.onload = handleIframeLoad;
-      document.body.appendChild(iframe);
-      console.log('Created hidden iframe for form submission.');
-    } else {
-      console.log('Using existing hidden iframe for form submission.');
-    }
-
-    // Submit the form
-    console.log('Submitting form...');
-    form.submit();
-
-    // Remove the form after submission
-    document.body.removeChild(form);
-    console.log('Form submitted and removed from the DOM.');
-  };
-
-  // Function to handle form submission completion
-  const handleIframeLoad = () => {
-    console.log('Form submission completed (iframe loaded).');
-
-    // Show success message if submission is successful
-    setMessage({ type: 'success', text: 'Your entry has been submitted successfully!' });
-
-    // Reset form fields
-    setObjktUrl('');
-    setTwitterHandle('');
-    setCaptchaValue(null);
-
-    // Reset reCAPTCHA
-    if (window.grecaptcha) {
-      window.grecaptcha.reset();
-    }
   };
 
   const handleCaptchaChange = (value) => {
-    console.log('reCAPTCHA value changed:', value);
     setCaptchaValue(value);
   };
 
@@ -370,8 +350,14 @@ function SubmitEntry() {
 
               {/* Submit Button */}
               <Grid item xs={12}>
-                <Button variant="contained" color="primary" type="submit" fullWidth>
-                  Submit Entry
+                <Button
+                  variant="contained"
+                  color="primary"
+                  type="submit"
+                  fullWidth
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Submitting...' : 'Submit Entry'}
                 </Button>
               </Grid>
             </Grid>

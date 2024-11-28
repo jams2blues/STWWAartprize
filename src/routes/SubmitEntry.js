@@ -278,6 +278,18 @@ function SubmitEntry() {
             </Typography>
           </li>
         </ol>
+        {/* Added Hyperlink to Blog Post */}
+        <Typography variant="body1" paragraph>
+          Want to learn more about on-chain Tezos NFTs and how to create them with no code? Check out our{' '}
+          <MuiLink
+            href="https://www.jams2blues.art/post/tezos-on-chain-art-a-new-frontier-in-nft-permanence"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            blog post
+          </MuiLink>
+          .
+        </Typography>
         <Typography variant="body1" paragraph>
           <strong>When the countdown timer expires,</strong> our curation team will select the top 10 entries for a community-voted poll competition on X (Twitter). We will tag all entrants and make it fun! The top 3 winners of the poll-off will win the following prizes:
         </Typography>

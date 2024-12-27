@@ -9,48 +9,61 @@ export const WalletContext = createContext();
 export const WalletProvider = ({ children }) => {
   const [walletAddress, setWalletAddress] = useState(null);
   const [Tezos, setTezos] = useState(null);
+  const [wallet, setWallet] = useState(null);
 
   useEffect(() => {
     const initWallet = async () => {
-      const wallet = new BeaconWallet({
-        name: 'Save The World With Art™ Art Prize',
-        preferredNetwork: 'mainnet',
-      });
-
-      const tezos = new TezosToolkit('https://mainnet.api.tez.ie');
-      tezos.setWalletProvider(wallet);
-
       try {
-        const address = await wallet.getPKH();
-        if (address) {
-          setWalletAddress(address);
+        // Initialize BeaconWallet
+        const beaconWallet = new BeaconWallet({
+          name: 'Save The World With Art™ Art Prize',
+          preferredNetwork: 'mainnet', // Ensure this matches your desired network
+        });
+
+        console.log('BeaconWallet initialized:', beaconWallet);
+
+        // Set BeaconWallet as the wallet provider
+        const tezosToolkit = new TezosToolkit('https://mainnet.api.tez.ie');
+        tezosToolkit.setWalletProvider(beaconWallet);
+        setTezos(tezosToolkit);
+
+        // Set the wallet instance in state
+        setWallet(beaconWallet);
+
+        // Check for an active account
+        if (typeof beaconWallet.client.getActiveAccount === 'function') {
+          const activeAccount = await beaconWallet.client.getActiveAccount();
+          console.log('Active Account:', activeAccount);
+
+          if (activeAccount) {
+            setWalletAddress(activeAccount.address);
+          }
+        } else {
+          console.error('getActiveAccount is not a function on beaconWallet.client.');
         }
       } catch (error) {
-        console.error('Failed to get wallet address:', error);
+        console.error('Failed to initialize wallet:', error);
       }
-
-      setTezos(tezos);
     };
 
     initWallet();
   }, []);
 
   const connectWallet = async () => {
-    const wallet = new BeaconWallet({
-      name: 'Save The World With Art™ Art Prize',
-      preferredNetwork: 'mainnet',
-    });
+    if (!wallet) {
+      console.error('Wallet not initialized');
+      return;
+    }
 
     try {
       await wallet.requestPermissions({
         network: {
-          type: 'mainnet',
+          type: 'mainnet', // Ensure this matches your desired network
         },
       });
 
       const address = await wallet.getPKH();
       setWalletAddress(address);
-      Tezos.setWalletProvider(wallet);
     } catch (error) {
       console.error('Wallet connection failed:', error);
       throw error; // Propagate error to be handled in the calling component
@@ -58,10 +71,11 @@ export const WalletProvider = ({ children }) => {
   };
 
   const disconnectWallet = async () => {
-    const wallet = new BeaconWallet({
-      name: 'Save The World With Art™ Art Prize',
-      preferredNetwork: 'mainnet',
-    });
+    if (!wallet) {
+      console.error('Wallet not initialized');
+      return;
+    }
+
     try {
       await wallet.clearActiveAccount();
       setWalletAddress(null);

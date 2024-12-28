@@ -4,11 +4,11 @@ import { createClient } from '@supabase/supabase-js';
 import axios from 'axios';
 
 // We'll rename environment variables for server usage
-const SUPABASE_URL = process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL;
+const REACT_APP_SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY =
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY;
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+const supabase = createClient(REACT_APP_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 // Set the countdown deadline (e.g., 2025-01-03). Any format you like:
 const DEADLINE = '2025-01-03T00:00:00Z';

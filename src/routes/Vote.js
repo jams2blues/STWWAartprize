@@ -1,5 +1,3 @@
-// src/routes/Vote.js
-
 import React, { useState, useContext } from 'react';
 import {
   Container,
@@ -33,7 +31,7 @@ const Vote = () => {
     setOpenModal(false);
   };
 
-  // Fetch Top 10 Artworks
+  // 1) Fetch Top 10 Artworks
   const { data, error, isLoading } = useQuery('topArtworks', async () => {
     const response = await axios.get('/api/getTopArtworks');
     if (response.data.success) {
@@ -45,26 +43,16 @@ const Vote = () => {
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-  // Voting Mutation
+  // 2) Mutation for voting
   const voteMutation = useMutation(
     async (uniqueTokenId) => {
       const [contractAddress, tokenId] = uniqueTokenId.split('_');
-
-      // Debug logs in case we suspect environment issues
-      console.log('Posting vote with:', {
-        walletAddress,
-        contractAddress,
-        tokenId: parseInt(tokenId, 10),
-        captchaToken: captchaValue,
-      });
-
       const response = await axios.post('/api/vote', {
         walletAddress,
         contractAddress,
         tokenId: parseInt(tokenId, 10),
         captchaToken: captchaValue,
       });
-
       if (response.data.success) {
         return response.data;
       } else {
@@ -98,7 +86,6 @@ const Vote = () => {
 
     setIsSubmitting(true);
     setMessage({ type: '', text: '' });
-
     try {
       await voteMutation.mutateAsync(uniqueTokenId);
     } catch (error) {
@@ -118,14 +105,12 @@ const Vote = () => {
         Save The World With Art™ Voting Platform
       </Typography>
 
-      {/* Timer */}
       <Box sx={{ mb: 4, textAlign: 'center' }}>
         <Typography variant="h6" sx={{ color: 'red' }}>
           Voting ends on: {new Date('2025-01-03').toLocaleDateString()}
         </Typography>
       </Box>
 
-      {/* Info Modal */}
       <Box sx={{ textAlign: 'right', mb: 2 }}>
         <Button onClick={handleOpenModal}>
           <InfoIcon />
@@ -133,14 +118,13 @@ const Vote = () => {
       </Box>
       <InfoModal open={openModal} handleClose={handleCloseModal} />
 
-      {/* Display messages */}
       {message.text && (
         <Alert severity={message.type} sx={{ mb: 2 }}>
           {message.text}
         </Alert>
       )}
 
-      {/* Connect Wallet */}
+      {/* Wallet */}
       <WalletConnectButton />
 
       {/* reCAPTCHA */}
@@ -152,14 +136,16 @@ const Vote = () => {
         />
       </Box>
 
-      {/* Additional Refresh Button above pyramid */}
+      {/* Additional Refresh Button ABOVE the pyramid */}
       <Box sx={{ textAlign: 'center', mb: 2 }}>
-        <Button variant="outlined" onClick={() => queryClient.invalidateQueries('topArtworks')}>
+        <Button
+          variant="outlined"
+          onClick={() => queryClient.invalidateQueries('topArtworks')}
+        >
           Refresh Live Winners
         </Button>
       </Box>
 
-      {/* Voting Section */}
       {isLoading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
           <CircularProgress />
@@ -177,9 +163,12 @@ const Vote = () => {
             walletAddress={walletAddress}
           />
 
-          {/* Refresh button below pyramid */}
+          {/* The existing Refresh Button at bottom */}
           <Box sx={{ textAlign: 'center', mt: 4 }}>
-            <Button variant="outlined" onClick={() => queryClient.invalidateQueries('topArtworks')}>
+            <Button
+              variant="outlined"
+              onClick={() => queryClient.invalidateQueries('topArtworks')}
+            >
               Refresh Live Winners
             </Button>
           </Box>

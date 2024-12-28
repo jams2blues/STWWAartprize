@@ -16,7 +16,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 
 const Pyramid = ({ artworks, handleVote, isSubmitting, walletAddress }) => {
-  // For handling "Read more" toggles
+  // For "Read more/less" toggles
   const [expandedIndexes, setExpandedIndexes] = useState({});
 
   const toggleExpand = (index) => {
@@ -26,7 +26,7 @@ const Pyramid = ({ artworks, handleVote, isSubmitting, walletAddress }) => {
     }));
   };
 
-  // Make the font a bit smaller for title and description
+  // Titles and descriptions smaller
   const titleStyle = {
     fontSize: '1rem',
     fontWeight: 'bold',
@@ -85,19 +85,17 @@ const Pyramid = ({ artworks, handleVote, isSubmitting, walletAddress }) => {
                 ? 4 + index
                 : 7 + index;
 
-            // Unique identifier combining contract_address and token_id
             const uniqueTokenId = `${artwork.contractAddress}_${artwork.tokenId}`;
-            const combinedIndex = rowIndex * 10 + index; // or any unique index scheme
+            const combinedIndex = rowIndex * 10 + index;
             const isExpanded = expandedIndexes[combinedIndex] || false;
 
-            // Decide how to display the description
+            // For a short/long description
             const shortDescriptionLimit = 150;
-            const shouldShowReadMore =
+            const hasLongDesc =
               artwork.description && artwork.description.length > shortDescriptionLimit;
-            const displayDescription =
-              !shouldShowReadMore || isExpanded
-                ? artwork.description
-                : artwork.description.substring(0, shortDescriptionLimit) + '...';
+            const displayDescription = !hasLongDesc || isExpanded
+              ? artwork.description
+              : artwork.description.substring(0, shortDescriptionLimit) + '...';
 
             return (
               <Grid item xs={12} sm={6} md={3} lg={2.4} key={uniqueTokenId}>
@@ -133,13 +131,15 @@ const Pyramid = ({ artworks, handleVote, isSubmitting, walletAddress }) => {
                     </Box>
                   )}
                   <CardContent>
-                    <Typography sx={titleStyle} component="div">
-                      {artwork.name || 'Unnamed Art'}
+                    <Typography sx={titleStyle}>
+                      {artwork.name || `Token ${artwork.tokenId}`}
                     </Typography>
+
                     <Typography sx={descriptionStyle}>
                       {displayDescription}
                     </Typography>
-                    {shouldShowReadMore && (
+
+                    {hasLongDesc && (
                       <Box sx={{ mt: 1 }}>
                         <IconButton
                           size="small"
@@ -158,9 +158,11 @@ const Pyramid = ({ artworks, handleVote, isSubmitting, walletAddress }) => {
                         </Typography>
                       </Box>
                     )}
+
                     <Typography variant="subtitle2" sx={{ mt: 2 }}>
                       <strong>Votes:</strong> {artwork.voteCount}
                     </Typography>
+
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                       <a
                         href={artwork.objktLink}
@@ -171,6 +173,7 @@ const Pyramid = ({ artworks, handleVote, isSubmitting, walletAddress }) => {
                         View on Objkt.com
                       </a>
                     </Typography>
+
                     <Typography variant="body2" color="text.secondary">
                       <a
                         href={artwork.twitterHandle}

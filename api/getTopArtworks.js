@@ -3,16 +3,21 @@
 import { createClient } from '@supabase/supabase-js';
 import { TezosToolkit } from '@taquito/taquito';
 
-// Initialize Supabase client with Service Role Key
+// ----------------------------------
+// 1. Initialize Supabase & Taquito
+// ----------------------------------
+
 const supabase = createClient(
-  process.env.REACT_APP_SUPABASE_URL,       // Your Supabase project URL
-  process.env.SUPABASE_SERVICE_ROLE_KEY     // Your Supabase Service Role Key
+  process.env.REACT_APP_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-// Initialize Taquito on mainnet
 const Tezos = new TezosToolkit('https://mainnet.api.tez.ie');
 
-// Mapping of (contract_address, token_id) to objktLink + social details
+// -------------------------------------------
+// 2. Prepare Our tokenDetailsMap for Links
+// -------------------------------------------
+
 const tokenDetailsMap = {
   'KT1Tj26yEQwFAKnpHCF6pWasz5qeYbVWC1iP_0': {
     objktLink: 'https://objkt.com/tokens/KT1Tj26yEQwFAKnpHCF6pWasz5qeYbVWC1iP/0',
@@ -66,12 +71,17 @@ const tokenDetailsMap = {
   },
 };
 
+// --------------------------------------------
+// 3. The Handler for GET /api/getTopArtworks
+// --------------------------------------------
+
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
 
   try {
+    // 3A. Pull top 10 from supabase
     const { data, error, status } = await supabase
       .from('votes')
       .select('contract_address, token_id, vote_count')
@@ -82,15 +92,17 @@ export default async function handler(req, res) {
       console.error('Supabase Error:', error);
       throw error;
     }
-
     if (!data || data.length === 0) {
       return res.status(200).json({ success: true, data: [] });
     }
 
+    // 3B. For each item in supabase data, fetch token-level metadata
     const artworksWithMetadata = await Promise.all(
       data.map(async (vote) => {
         const { contract_address, token_id, vote_count } = vote;
         const key = `${contract_address}_${token_id}`;
+
+        // 1) Grab fallback info from tokenDetailsMap
         const tokenDetails = tokenDetailsMap[key] || {
           objktLink: `https://objkt.com/tokens/${contract_address}/${token_id}`,
           twitterHandle: '#',
@@ -98,22 +110,45 @@ export default async function handler(req, res) {
         };
 
         try {
-          // Instead of pulling the contract-level metadata, call the TZIP-12 "get_metadata" view
+          // 2) Access the contract storage
           const contract = await Tezos.contract.at(contract_address);
+          const storage = await contract.storage();
 
-          // If your #ZeroContract supports a view like this:
-          // const tokenMetadata = await contract.views.get_metadata.tokenId(token_id).read();
-          // Then do:
-          if (!contract.views || !contract.views.get_metadata) {
-            throw new Error(`No "get_metadata" view found on contract ${contract_address}`);
+          // 3) The "token_metadata" big_map is in storage.token_metadata
+          //    Each entry: { token_id: number, token_info: Map<string, bytes> }
+          if (!storage.token_metadata) {
+            throw new Error(`No token_metadata big map found on ${contract_address}`);
+          }
+          const tokenMetadataBigMap = storage.token_metadata;
+
+          // 4) Retrieve the record for this token_id
+          const tokenMetadataPair = await tokenMetadataBigMap.get(token_id);
+          if (!tokenMetadataPair) {
+            throw new Error(`No entry in token_metadata for token_id ${token_id}`);
           }
 
-          const tokenMetadata = await contract.views.get_metadata.tokenId(token_id).read();
+          // 5) Destructure the big map entry
+          //    tokenMetadataPair is typically { token_id: X, token_info: Map(...) }
+          const { token_info } = tokenMetadataPair;
 
-          // tokenMetadata is an object containing "artifactUri", "name", "description", etc.
-          const name = tokenMetadata.name || `Token ${token_id}`;
-          const description = tokenMetadata.description || 'No description available.';
-          const image = tokenMetadata.artifactUri ? tokenMetadata.artifactUri : '';
+          // 6) Decode all fields we care about
+          const decodedFields = {};
+          for (const [rawKey, rawVal] of token_info.entries()) {
+            // rawVal is hex-encoded => convert to utf8
+            const utf8Val = Buffer.from(rawVal, 'hex').toString('utf8');
+            decodedFields[rawKey] = utf8Val;
+          }
+
+          // 7) We want name, description, image, etc.
+          //    According to your notes, some store "artifactUri", some store "imageUri"
+          //    We'll check them both.
+          const name = decodedFields.name || `Token ${token_id}`;
+          const description = decodedFields.description || 'No description available.';
+          const artifactUri = decodedFields.artifactUri || '';
+          const imageUri = decodedFields.imageUri || ''; // if present
+          // If artifactUri is present, we prefer that.
+          // Otherwise fallback to imageUri, etc.
+          const finalImage = artifactUri.length > 0 ? artifactUri : imageUri;
 
           return {
             contractAddress: contract_address,
@@ -121,17 +156,17 @@ export default async function handler(req, res) {
             voteCount: vote_count,
             name,
             description,
-            image,
+            image: finalImage,
             objktLink: tokenDetails.objktLink,
             twitterHandle: tokenDetails.twitterHandle,
             twitterUsername: tokenDetails.twitterUsername,
           };
         } catch (err) {
           console.error(
-            `Error fetching token-level metadata for ${contract_address}_${token_id}:`,
+            `Error retrieving metadata from token_metadata big map for ${contract_address}_${token_id}:`,
             err
           );
-          // Fallback if something goes wrong
+          // fallback if something fails
           return {
             contractAddress: contract_address,
             tokenId: token_id,
@@ -148,8 +183,8 @@ export default async function handler(req, res) {
     );
 
     return res.status(200).json({ success: true, data: artworksWithMetadata });
-  } catch (error) {
-    console.error('Error fetching top artworks:', error);
+  } catch (err) {
+    console.error('Error fetching top artworks:', err);
     return res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 }

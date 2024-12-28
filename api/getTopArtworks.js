@@ -2,7 +2,6 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { TezosToolkit } from '@taquito/taquito';
-import { BeaconWallet } from '@taquito/beacon-wallet';
 
 // Initialize Supabase client with Service Role Key
 const supabase = createClient(
@@ -154,12 +153,10 @@ export default async function handler(req, res) {
             // Parse the JSON metadata
             const metadata = JSON.parse(metadataContent);
 
-            // Handle artifactUri and imageUri
+            // Handle artifactUri
             let image = '';
             if (metadata.artifactUri) {
               image = metadata.artifactUri; // Already a data URI
-            } else if (metadata.imageUri) {
-              image = metadata.imageUri; // Already a data URI
             }
 
             return {

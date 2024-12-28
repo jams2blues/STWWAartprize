@@ -1,5 +1,3 @@
-// src/routes/Vote.js
-
 import React, { useState, useContext } from 'react';
 import {
   Container,
@@ -16,10 +14,10 @@ import axios from 'axios';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import InfoIcon from '@mui/icons-material/Info';
 import InfoModal from '../components/InfoModal';
-import Pyramid from '../components/Pyramid'; // Import the Pyramid component
+import Pyramid from '../components/Pyramid';
 
 const Vote = () => {
-  const { walletAddress, Tezos } = useContext(WalletContext);
+  const { walletAddress } = useContext(WalletContext);
   const queryClient = useQueryClient();
   const [message, setMessage] = useState({ type: '', text: '' });
   const [captchaValue, setCaptchaValue] = useState(null);
@@ -33,7 +31,7 @@ const Vote = () => {
     setOpenModal(false);
   };
 
-  // Fetch Top 10 Artworks using React Query
+  // 1) Fetch Top 10 Artworks
   const { data, error, isLoading } = useQuery('topArtworks', async () => {
     const response = await axios.get('/api/getTopArtworks');
     if (response.data.success) {
@@ -45,7 +43,7 @@ const Vote = () => {
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-  // Mutation for voting
+  // 2) Mutation for voting
   const voteMutation = useMutation(
     async (uniqueTokenId) => {
       const [contractAddress, tokenId] = uniqueTokenId.split('_');
@@ -81,7 +79,6 @@ const Vote = () => {
       setMessage({ type: 'error', text: 'Please connect your wallet to vote.' });
       return;
     }
-
     if (!captchaValue) {
       setMessage({ type: 'error', text: 'Please complete the reCAPTCHA.' });
       return;
@@ -89,7 +86,6 @@ const Vote = () => {
 
     setIsSubmitting(true);
     setMessage({ type: '', text: '' });
-
     try {
       await voteMutation.mutateAsync(uniqueTokenId);
     } catch (error) {
@@ -105,19 +101,16 @@ const Vote = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      {/* Header */}
       <Typography variant="h4" gutterBottom align="center" sx={{ fontWeight: 'bold', mb: 2 }}>
         Save The World With Art™ Voting Platform
       </Typography>
 
-      {/* Countdown Timer */}
       <Box sx={{ mb: 4, textAlign: 'center' }}>
         <Typography variant="h6" sx={{ color: 'red' }}>
           Voting ends on: {new Date('2025-01-03').toLocaleDateString()}
         </Typography>
       </Box>
 
-      {/* Information Modal */}
       <Box sx={{ textAlign: 'right', mb: 2 }}>
         <Button onClick={handleOpenModal}>
           <InfoIcon />
@@ -125,17 +118,16 @@ const Vote = () => {
       </Box>
       <InfoModal open={openModal} handleClose={handleCloseModal} />
 
-      {/* Display messages */}
       {message.text && (
         <Alert severity={message.type} sx={{ mb: 2 }}>
           {message.text}
         </Alert>
       )}
 
-      {/* Wallet Connection */}
+      {/* Wallet */}
       <WalletConnectButton />
 
-      {/* ReCAPTCHA */}
+      {/* reCAPTCHA */}
       <Box sx={{ my: 2, textAlign: 'center' }}>
         <ReCAPTCHA
           sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}
@@ -144,7 +136,16 @@ const Vote = () => {
         />
       </Box>
 
-      {/* Voting Section */}
+      {/* Additional Refresh Button ABOVE the pyramid */}
+      <Box sx={{ textAlign: 'center', mb: 2 }}>
+        <Button
+          variant="outlined"
+          onClick={() => queryClient.invalidateQueries('topArtworks')}
+        >
+          Refresh Live Winners
+        </Button>
+      </Box>
+
       {isLoading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
           <CircularProgress />
@@ -162,9 +163,12 @@ const Vote = () => {
             walletAddress={walletAddress}
           />
 
-          {/* Refresh Button */}
+          {/* The existing Refresh Button at bottom */}
           <Box sx={{ textAlign: 'center', mt: 4 }}>
-            <Button variant="outlined" onClick={() => queryClient.invalidateQueries('topArtworks')}>
+            <Button
+              variant="outlined"
+              onClick={() => queryClient.invalidateQueries('topArtworks')}
+            >
               Refresh Live Winners
             </Button>
           </Box>

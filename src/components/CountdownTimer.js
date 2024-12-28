@@ -1,66 +1,55 @@
-// src/components/CountdownTimer.js
+// artprize.savetheworldwithart.io/src/components/CountdownTimer.js
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Typography, Box } from '@mui/material';
-import dayjs from 'dayjs';
-import duration from 'dayjs/plugin/duration';
 
-dayjs.extend(duration);
+const CountdownTimer = ({ targetDate, onEnd }) => {
+  const calculateTimeLeft = () => {
+    const difference = +new Date(targetDate) - +new Date();
+    let timeLeft = {};
 
-const CountdownTimer = ({ targetDate }) => {
-  const [timeLeft, setTimeLeft] = useState({
-    days: '00',
-    hours: '00',
-    minutes: '00',
-    seconds: '00',
-    isEnded: false,
-  });
+    if (difference > 0) {
+      timeLeft = {
+        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((difference / 1000 / 60) % 60),
+        seconds: Math.floor((difference / 1000) % 60),
+      };
+    }
+
+    return timeLeft;
+  };
+
+  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
 
   useEffect(() => {
-    const calculateTimeLeft = () => {
-      const now = dayjs();
-      const end = dayjs(targetDate);
-      const diff = end.diff(now);
+    const timer = setTimeout(() => {
+      const newTimeLeft = calculateTimeLeft();
+      setTimeLeft(newTimeLeft);
 
-      if (diff <= 0) {
-        return {
-          days: '00',
-          hours: '00',
-          minutes: '00',
-          seconds: '00',
-          isEnded: true,
-        };
+      if (Object.keys(newTimeLeft).length === 0 && onEnd) {
+        onEnd();
       }
-
-      const dur = dayjs.duration(diff);
-
-      return {
-        days: String(Math.floor(dur.asDays())).padStart(2, '0'),
-        hours: String(dur.hours()).padStart(2, '0'),
-        minutes: String(dur.minutes()).padStart(2, '0'),
-        seconds: String(dur.seconds()).padStart(2, '0'),
-        isEnded: false,
-      };
-    };
-
-    const timer = setInterval(() => {
-      setTimeLeft(calculateTimeLeft());
     }, 1000);
 
-    return () => clearInterval(timer);
-  }, [targetDate]);
+    return () => clearTimeout(timer);
+  });
+
+  const timerComponents = [];
+
+  Object.keys(timeLeft).forEach((interval) => {
+    timerComponents.push(
+      <Box key={interval} sx={{ display: 'inline-block', marginRight: '10px' }}>
+        <Typography variant="h6">
+          {timeLeft[interval]} {interval}
+        </Typography>
+      </Box>
+    );
+  });
 
   return (
     <Box sx={{ textAlign: 'center', mb: 4 }}>
-      {timeLeft.isEnded ? (
-        <Typography variant="h6" sx={{ color: 'red' }}>
-          Voting has ended.
-        </Typography>
-      ) : (
-        <Typography variant="h6" sx={{ color: 'red' }}>
-          Voting ends in: {timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s
-        </Typography>
-      )}
+      {timerComponents.length ? timerComponents : <Typography variant="h6">Voting has ended.</Typography>}
     </Box>
   );
 };

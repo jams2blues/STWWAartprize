@@ -1,4 +1,4 @@
-// src/routes/Vote.js
+// artprize.savetheworldwithart.io/src/routes/Vote.js
 
 import React, { useState, useContext } from 'react';
 import {
@@ -26,12 +26,19 @@ const Vote = () => {
   const [captchaValue, setCaptchaValue] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [openModal, setOpenModal] = useState(false);
+  const [isVotingOpen, setIsVotingOpen] = useState(true);
 
   const handleOpenModal = () => {
     setOpenModal(true);
   };
   const handleCloseModal = () => {
     setOpenModal(false);
+  };
+
+  // Callback when countdown ends
+  const handleCountdownEnd = () => {
+    setIsVotingOpen(false);
+    setMessage({ type: 'info', text: 'Voting period has ended.' });
   };
 
   // 1) Fetch Top 10 Artworks
@@ -63,8 +70,8 @@ const Vote = () => {
       }
     },
     {
-      onSuccess: () => {
-        setMessage({ type: 'success', text: 'Your vote has been recorded!' });
+      onSuccess: (data) => {
+        setMessage({ type: 'success', text: data.message });
         setCaptchaValue(null);
         queryClient.invalidateQueries('topArtworks');
         if (window.grecaptcha) {
@@ -84,6 +91,10 @@ const Vote = () => {
     }
     if (!captchaValue) {
       setMessage({ type: 'error', text: 'Please complete the reCAPTCHA.' });
+      return;
+    }
+    if (!isVotingOpen) {
+      setMessage({ type: 'error', text: 'Voting has ended.' });
       return;
     }
 
@@ -113,7 +124,7 @@ const Vote = () => {
       </Typography>
       
       {/* Live Countdown Timer */}
-      <CountdownTimer targetDate="2025-01-07T00:00:00Z" /> {/* Update target date as needed */}
+      <CountdownTimer targetDate="2025-01-07T00:00:00Z" onEnd={handleCountdownEnd} /> {/* Update target date as needed */}
 
       {/* Information Modal */}
       <Box sx={{ textAlign: 'right', mb: 2 }}>
@@ -166,6 +177,7 @@ const Vote = () => {
             handleVote={handleVote}
             isSubmitting={isSubmitting}
             walletAddress={walletAddress}
+            isVotingOpen={isVotingOpen} // Pass the voting status
           />
 
           {/* The existing Refresh Button at bottom */}

@@ -1,4 +1,4 @@
-// src/components/Pyramid.js
+// artprize.savetheworldwithart.io/src/components/Pyramid.js
 
 import React, { useState } from 'react';
 import {
@@ -169,20 +169,20 @@ const Pyramid = ({ artworks, handleVote, isSubmitting, walletAddress }) => {
                 ? artwork.description
                 : artwork.description.substring(0, shortDescriptionLimit) + '...';
 
-              return (
-                <Grid item xs={12} sm={6} md={3} lg={2.4} key={uniqueTokenId} sx={{ position: 'relative' }}>
-                  {/* Rank Label */}
-                  <RankLabel rank={rank}>
-                    {ordinalRank}
-                  </RankLabel>
-
-                  <Card
-                    sx={{
-                      border: getBorderStyle(rank),
-                      transition: 'transform 0.3s',
-                      '&:hover': { transform: 'scale(1.05)' },
-                    }}
-                  >
+                return (
+                  <Grid item xs={12} sm={6} md={3} lg={2.4} key={uniqueTokenId} sx={{ position: 'relative' }}>
+                    {/* Rank Label */}
+                    <RankLabel rank={rank}>
+                      {ordinalRank}
+                    </RankLabel>
+  
+                    <Card
+                      sx={{
+                        border: getBorderStyle(rank),
+                        transition: 'transform 0.3s',
+                        '&:hover': { transform: 'scale(1.05)' },
+                      }}
+                    >
                     {artwork.image ? (
                       <Box sx={{ position: 'relative' }}>
                         {/* Magnifying Glass in top-right corner */}
@@ -294,7 +294,7 @@ const Pyramid = ({ artworks, handleVote, isSubmitting, walletAddress }) => {
                         color="primary"
                         fullWidth
                         onClick={() => handleVote(uniqueTokenId)}
-                        disabled={isSubmitting || !walletAddress}
+                        disabled={isSubmitting || !walletAddress || !isVotingOpen}
                       >
                         {isSubmitting ? 'Voting...' : 'Vote'}
                       </Button>

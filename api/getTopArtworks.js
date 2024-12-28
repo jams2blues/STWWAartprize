@@ -3,17 +3,13 @@
 import { createClient } from '@supabase/supabase-js';
 import { TezosToolkit } from '@taquito/taquito';
 
-// Initialize Supabase & Taquito
+// Initialize Supabase with Server-Side Keys
 const supabase = createClient(
-  process.env.REACT_APP_SUPABASE_URL,
-  process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
 const Tezos = new TezosToolkit('https://mainnet.api.tez.ie');
-
-// -------------------------------------------
-// 2. Prepare Our tokenDetailsMap for Links
-// -------------------------------------------
 
 const tokenDetailsMap = {
   'KT1Tj26yEQwFAKnpHCF6pWasz5qeYbVWC1iP_0': {
@@ -75,23 +71,26 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Aggregate votes by contract_address and token_id to count total votes per artwork
     const { data, error, status } = await supabase
       .from('votes')
-      .select('contract_address, token_id, vote_count')
-      .order('vote_count', { ascending: false })
+      .select('contract_address, token_id, count(*) as total_votes')
+      .group('contract_address, token_id')
+      .order('total_votes', { ascending: false })
       .limit(10);
 
     if (error && status !== 406) {
       console.error('Supabase Error:', error);
       throw error;
     }
+
     if (!data || data.length === 0) {
       return res.status(200).json({ success: true, data: [] });
     }
 
     const artworksWithMetadata = await Promise.all(
       data.map(async (vote) => {
-        const { contract_address, token_id, vote_count } = vote;
+        const { contract_address, token_id, total_votes } = vote;
         const key = `${contract_address}_${token_id}`;
 
         const tokenDetails = tokenDetailsMap[key] || {
@@ -131,7 +130,7 @@ export default async function handler(req, res) {
           return {
             contractAddress: contract_address,
             tokenId: token_id,
-            voteCount: vote_count,
+            voteCount: parseInt(total_votes, 10),
             name,
             description,
             image: finalImage,
@@ -144,7 +143,7 @@ export default async function handler(req, res) {
           return {
             contractAddress: contract_address,
             tokenId: token_id,
-            voteCount: vote_count,
+            voteCount: parseInt(total_votes, 10),
             name: `Token ${token_id}`,
             description: 'No description available.',
             image: '',

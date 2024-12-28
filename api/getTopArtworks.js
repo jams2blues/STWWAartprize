@@ -84,8 +84,7 @@ export default async function handler(req, res) {
   try {
     const { data, error, status } = await supabase
       .from('votes')
-      .select('contract_address, token_id, SUM(vote_count) as vote_count')
-      .group('contract_address, token_id')
+      .select('contract_address, token_id, vote_count')
       .order('vote_count', { ascending: false })
       .limit(10);
 

@@ -75,6 +75,7 @@ const tokenDetailsMap = {
 // 3. The Handler for GET /api/getTopArtworks
 // --------------------------------------------
 
+// Handler for GET /api/getTopArtworks
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ message: 'Method Not Allowed' });

@@ -79,7 +79,7 @@ export default async function handler(req, res) {
       .order('total_votes', { ascending: false })
       .limit(10);
 
-    if (error && status !== 406) {
+    if (error && status !== 406) { // 406: No data
       console.error('Supabase Error:', error);
       throw error;
     }

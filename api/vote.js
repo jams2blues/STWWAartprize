@@ -1,96 +1,76 @@
 // artprize.savetheworldwithart.io/api/vote.js
 
-import { supabase } from '../../src/supabaseClient';
+import { createClient } from '@supabase/supabase-js';
+import axios from 'axios';
+
+// Initialize Supabase client with Service Role Key
+const supabase = createClient(
+  process.env.REACT_APP_SUPABASE_URL, // Public Supabase URL
+  process.env.SUPABASE_SERVICE_ROLE_KEY // Service Role Key for backend
+);
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    res.status(405).json({ message: 'Method Not Allowed' });
-    return;
+    return res.status(405).json({ success: false, message: 'Method Not Allowed' });
   }
 
-  const { walletAddress, tokenId, captchaToken } = req.body;
+  const { walletAddress, contractAddress, tokenId, captchaToken } = req.body;
 
-  // Basic input validation
-  if (
-    !walletAddress ||
-    typeof walletAddress !== 'string' ||
-    !tokenId ||
-    typeof tokenId !== 'number' ||
-    !captchaToken ||
-    typeof captchaToken !== 'string'
-  ) {
-    res.status(400).json({ success: false, message: 'Invalid input data.' });
-    return;
+  // Basic validation
+  if (!walletAddress || !contractAddress || tokenId === undefined || !captchaToken) {
+    return res.status(400).json({ success: false, message: 'Missing required fields.' });
   }
 
-  const secretKey = process.env.RECAPTCHA_SECRET_KEY;
-
-  // Verify reCAPTCHA
   try {
-    const response = await fetch(
-      `https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${captchaToken}`,
-      { method: 'POST' }
-    );
+    // Verify reCAPTCHA
+    const verifyUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${captchaToken}`;
+    const captchaResponse = await axios.post(verifyUrl);
 
-    const data = await response.json();
-
-    if (!data.success) {
-      res.status(400).json({ success: false, message: 'reCAPTCHA verification failed.' });
-      return;
+    if (!captchaResponse.data.success) {
+      return res.status(400).json({ success: false, message: 'reCAPTCHA verification failed.' });
     }
-  } catch (error) {
-    console.error('reCAPTCHA verification error:', error);
-    res.status(500).json({ success: false, message: 'Internal Server Error' });
-    return;
-  }
 
-  try {
-    // Check if the wallet has already voted
-    const { data: existingVote, error: fetchError } = await supabase
+    // Check if the user has already voted for this token
+    const { data: existingVote, error: selectError } = await supabase
       .from('votes')
       .select('*')
       .eq('wallet_address', walletAddress)
+      .eq('contract_address', contractAddress)
+      .eq('token_id', tokenId)
       .single();
 
-    if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116: No rows found
-      throw fetchError;
+    if (selectError && selectError.code !== 'PGRST116') { // 'PGRST116' = No rows found
+      throw selectError;
     }
 
     if (existingVote) {
-      // Update the vote to the new token_id
-      const { error: updateError } = await supabase
+      // User has already voted for this token, increment vote_count
+      const { data, error } = await supabase
         .from('votes')
-        .update({ token_id: tokenId, updated_at: new Date() })
-        .eq('wallet_address', walletAddress);
+        .update({ vote_count: existingVote.vote_count + 1 })
+        .eq('wallet_address', walletAddress)
+        .eq('contract_address', contractAddress)
+        .eq('token_id', tokenId);
 
-      if (updateError) {
-        throw updateError;
+      if (error) {
+        throw error;
       }
 
-      res.status(200).json({ success: true, message: 'Vote updated successfully.' });
+      return res.status(200).json({ success: true, message: 'Vote updated successfully.', data });
     } else {
-      // Insert a new vote
-      const { error: insertError } = await supabase.from('votes').insert([
-        {
-          wallet_address: walletAddress,
-          token_id: tokenId,
-          created_at: new Date(),
-        },
-      ]);
+      // First time voting for this token, insert a new row
+      const { data, error } = await supabase
+        .from('votes')
+        .insert([{ wallet_address: walletAddress, contract_address: contractAddress, token_id: tokenId, vote_count: 1 }]);
 
-      if (insertError) {
-        // If the error is due to the unique constraint, return a specific message
-        if (insertError.code === '23505') { // unique_violation
-          res.status(400).json({ success: false, message: 'You have already voted. To change your vote, please update it.' });
-          return;
-        }
-        throw insertError;
+      if (error) {
+        throw error;
       }
 
-      res.status(200).json({ success: true, message: 'Vote recorded successfully.' });
+      return res.status(200).json({ success: true, message: 'Vote recorded successfully.', data });
     }
   } catch (error) {
-    console.error('Error recording vote:', error);
-    res.status(500).json({ success: false, message: 'Internal Server Error' });
+    console.error('Error processing vote:', error);
+    return res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 }

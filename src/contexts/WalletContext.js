@@ -1,4 +1,4 @@
-// src/contexts/WalletContext.js
+// artprize.savetheworldwithart.io/src/contexts/WalletContext.js
 
 import React, { createContext, useState, useEffect } from 'react';
 import { TezosToolkit } from '@taquito/taquito';
@@ -31,15 +31,11 @@ export const WalletProvider = ({ children }) => {
         setWallet(beaconWallet);
 
         // Check for an active account
-        if (typeof beaconWallet.client.getActiveAccount === 'function') {
-          const activeAccount = await beaconWallet.client.getActiveAccount();
-          console.log('Active Account:', activeAccount);
+        const activeAccount = await beaconWallet.getActiveAccount();
+        console.log('Active Account:', activeAccount);
 
-          if (activeAccount) {
-            setWalletAddress(activeAccount.address);
-          }
-        } else {
-          console.error('getActiveAccount is not a function on beaconWallet.client.');
+        if (activeAccount) {
+          setWalletAddress(activeAccount.address);
         }
       } catch (error) {
         console.error('Failed to initialize wallet:', error);

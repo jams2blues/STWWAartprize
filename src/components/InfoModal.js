@@ -1,4 +1,4 @@
-// src/components/InfoModal.js
+// artprize.savetheworldwithart.io/src/components/InfoModal.js
 
 import React from 'react';
 import { Modal, Box, Typography, IconButton } from '@mui/material';

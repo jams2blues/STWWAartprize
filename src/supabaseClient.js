@@ -1,4 +1,4 @@
-// src/supabaseClient.js
+// artprize.savetheworldwithart.io/src/supabaseClient.js
 
 import { createClient } from '@supabase/supabase-js';
 

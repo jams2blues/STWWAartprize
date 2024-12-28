@@ -1,3 +1,5 @@
+// src/routes/Vote.js
+
 import React, { useState, useContext } from 'react';
 import {
   Container,
@@ -130,7 +132,7 @@ const Vote = () => {
       {/* reCAPTCHA */}
       <Box sx={{ my: 2, textAlign: 'center' }}>
         <ReCAPTCHA
-          sitekey={process.env.RECAPTCHA_SITE_KEY}
+          sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}
           onChange={handleCaptchaChange}
           theme="light"
         />

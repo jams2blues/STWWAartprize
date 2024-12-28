@@ -1,3 +1,5 @@
+// src/components/Pyramid.js
+
 import React, { useState } from 'react';
 import {
   Grid,

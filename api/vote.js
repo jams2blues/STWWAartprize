@@ -5,8 +5,8 @@ import axios from 'axios';
 
 // Initialize Supabase client with Service Role Key
 const supabase = createClient(
-  process.env.SUPABASE_URL, // Public Supabase URL
-  process.env.SUPABASE_SERVICE_ROLE_KEY // Service Role Key for backend
+  process.env.REACT_APP_SUPABASE_URL, // Public Supabase URL
+  process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY // Service Role Key for backend
 );
 
 export default async function handler(req, res) {

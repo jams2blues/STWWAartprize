@@ -1,11 +1,11 @@
-// api/vote.js
+// artprize.savetheworldwithart.io/api/vote.js
 
 import { createClient } from '@supabase/supabase-js';
 import axios from 'axios';
 
 const supabase = createClient(
-  process.env.REACT_APP_SUPABASE_URL,
-  process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
 export default async function handler(req, res) {
@@ -22,7 +22,7 @@ export default async function handler(req, res) {
 
   try {
     // Verify reCAPTCHA
-    const verifyUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.REACT_APP_RECAPTCHA_SECRET_KEY}&response=${captchaToken}`;
+    const verifyUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${captchaToken}`;
     const captchaResponse = await axios.post(verifyUrl);
 
     if (!captchaResponse.data.success) {

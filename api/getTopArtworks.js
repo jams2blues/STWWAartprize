@@ -8,8 +8,8 @@ import { TezosToolkit } from '@taquito/taquito';
 // ----------------------------------
 
 const supabase = createClient(
-  process.env.REACT_APP_SUPABASE_URL,
-  process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
 const Tezos = new TezosToolkit('https://mainnet.api.tez.ie');
@@ -84,7 +84,8 @@ export default async function handler(req, res) {
   try {
     const { data, error, status } = await supabase
       .from('votes')
-      .select('contract_address, token_id, vote_count')
+      .select('contract_address, token_id, SUM(vote_count) as vote_count')
+      .group('contract_address, token_id')
       .order('vote_count', { ascending: false })
       .limit(10);
 

@@ -33,7 +33,7 @@ module.exports = {
         util: require.resolve('util'),
         os: require.resolve('os-browserify/browser'),
         process: require.resolve('process/browser.js'),
-        fs: false,
+        fs: false, // Mock 'fs' as it's not available in the browser
       };
 
       // Alias 'stream' to 'stream-browserify'
@@ -62,7 +62,7 @@ module.exports = {
             ...rule,
             exclude: [
               ...(rule.exclude || []),
-              /@airgap\//,
+              /@airgap\//, // Exclude all @airgap packages
               /@airgap\/beacon-core/,
               /@airgap\/beacon-dapp/,
               /@airgap\/beacon-transport-matrix/,

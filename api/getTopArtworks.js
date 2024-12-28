@@ -5,14 +5,14 @@ import { TezosToolkit } from '@taquito/taquito';
 
 // Initialize Supabase client with Service Role Key
 const supabase = createClient(
-  process.env.REACT_APP_SUPABASE_URL, // Public Supabase URL
-  process.env.SUPABASE_SERVICE_ROLE_KEY // Service Role Key for backend
+  process.env.REACT_APP_SUPABASE_URL,       // Your Supabase project URL
+  process.env.SUPABASE_SERVICE_ROLE_KEY     // Your Supabase Service Role Key
 );
 
-// Initialize Taquito
-const Tezos = new TezosToolkit('https://mainnet.api.tez.ie'); // Ensure this matches your network
+// Initialize Taquito on mainnet
+const Tezos = new TezosToolkit('https://mainnet.api.tez.ie');
 
-// Mapping of (contract_address, token_id) to objktLink and twitterHandle
+// Mapping of (contract_address, token_id) to objktLink + social details
 const tokenDetailsMap = {
   'KT1Tj26yEQwFAKnpHCF6pWasz5qeYbVWC1iP_0': {
     objktLink: 'https://objkt.com/tokens/KT1Tj26yEQwFAKnpHCF6pWasz5qeYbVWC1iP/0',
@@ -72,14 +72,13 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Fetch top 10 artworks ordered by vote_count descending
     const { data, error, status } = await supabase
       .from('votes')
       .select('contract_address, token_id, vote_count')
       .order('vote_count', { ascending: false })
       .limit(10);
 
-    if (error && status !== 406) { // 406: Not Acceptable (no data)
+    if (error && status !== 406) {
       console.error('Supabase Error:', error);
       throw error;
     }
@@ -88,7 +87,6 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true, data: [] });
     }
 
-    // Fetch metadata for each token
     const artworksWithMetadata = await Promise.all(
       data.map(async (vote) => {
         const { contract_address, token_id, vote_count } = vote;
@@ -100,81 +98,40 @@ export default async function handler(req, res) {
         };
 
         try {
+          // Instead of pulling the contract-level metadata, call the TZIP-12 "get_metadata" view
           const contract = await Tezos.contract.at(contract_address);
-          const storage = await contract.storage();
 
-          // Access the metadata big map
-          const metadataMap = storage.metadata;
-
-          // Retrieve the metadata URI from the big map using the empty string key ''
-          let metadataURI = await metadataMap.get('');
-
-          if (!metadataURI) {
-            throw new Error('Metadata URI not found in contract storage.');
+          // If your #ZeroContract supports a view like this:
+          // const tokenMetadata = await contract.views.get_metadata.tokenId(token_id).read();
+          // Then do:
+          if (!contract.views || !contract.views.get_metadata) {
+            throw new Error(`No "get_metadata" view found on contract ${contract_address}`);
           }
 
-          // Decode metadataURI from hex string to UTF-8 string
-          if (typeof metadataURI === 'string') {
-            // Check if it's a hex string
-            if (/^[0-9a-fA-F]+$/.test(metadataURI)) {
-              metadataURI = Buffer.from(metadataURI, 'hex').toString('utf8');
-            }
-            // Else, it's already a UTF-8 string
-          } else if (metadataURI.bytes) {
-            metadataURI = Buffer.from(metadataURI.bytes, 'hex').toString('utf8');
-          } else {
-            throw new Error('Metadata URI has an unexpected type.');
-          }
+          const tokenMetadata = await contract.views.get_metadata.tokenId(token_id).read();
 
-          // Check if metadataURI starts with 'tezos-storage:'
-          if (metadataURI.startsWith('tezos-storage:')) {
-            const metadataKey = metadataURI.replace('tezos-storage:', '');
+          // tokenMetadata is an object containing "artifactUri", "name", "description", etc.
+          const name = tokenMetadata.name || `Token ${token_id}`;
+          const description = tokenMetadata.description || 'No description available.';
+          const image = tokenMetadata.artifactUri ? tokenMetadata.artifactUri : '';
 
-            // Retrieve the metadata content from the big map using the key from the URI
-            let metadataContent = await metadataMap.get(metadataKey);
-
-            if (!metadataContent) {
-              throw new Error(`Metadata content not found in contract storage for key '${metadataKey}'.`);
-            }
-
-            // Decode metadataContent from hex string to UTF-8 string
-            if (typeof metadataContent === 'string') {
-              // Check if it's a hex string
-              if (/^[0-9a-fA-F]+$/.test(metadataContent)) {
-                metadataContent = Buffer.from(metadataContent, 'hex').toString('utf8');
-              }
-              // Else, it's already a UTF-8 string
-            } else if (metadataContent.bytes) {
-              metadataContent = Buffer.from(metadataContent.bytes, 'hex').toString('utf8');
-            } else {
-              throw new Error('Metadata content has an unexpected type.');
-            }
-
-            // Parse the JSON metadata
-            const metadata = JSON.parse(metadataContent);
-
-            // Handle artifactUri
-            let image = '';
-            if (metadata.artifactUri) {
-              image = metadata.artifactUri; // Already a data URI
-            }
-
-            return {
-              contractAddress: contract_address,
-              tokenId: token_id,
-              voteCount: vote_count,
-              name: metadata.name || `Token ${token_id}`,
-              description: metadata.description || 'No description available.',
-              image: image || '',
-              objktLink: tokenDetails.objktLink,
-              twitterHandle: tokenDetails.twitterHandle,
-              twitterUsername: tokenDetails.twitterUsername,
-            };
-          } else {
-            throw new Error('Unsupported metadata URI scheme. Expected "tezos-storage:".');
-          }
-        } catch (metadataError) {
-          console.error(`Error fetching metadata for token ${contract_address}_${token_id}:`, metadataError);
+          return {
+            contractAddress: contract_address,
+            tokenId: token_id,
+            voteCount: vote_count,
+            name,
+            description,
+            image,
+            objktLink: tokenDetails.objktLink,
+            twitterHandle: tokenDetails.twitterHandle,
+            twitterUsername: tokenDetails.twitterUsername,
+          };
+        } catch (err) {
+          console.error(
+            `Error fetching token-level metadata for ${contract_address}_${token_id}:`,
+            err
+          );
+          // Fallback if something goes wrong
           return {
             contractAddress: contract_address,
             tokenId: token_id,

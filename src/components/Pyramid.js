@@ -67,7 +67,7 @@ const Pyramid = ({ artworks, handleVote, isSubmitting, walletAddress }) => {
                       component="img"
                       height="200"
                       image={artwork.image}
-                      alt={artwork.name}
+                      alt={artwork.name || 'NFT Image'}
                       loading="lazy" // Lazy loading for performance
                       sx={{ objectFit: 'cover' }}
                     />
@@ -88,12 +88,14 @@ const Pyramid = ({ artworks, handleVote, isSubmitting, walletAddress }) => {
                   )}
                   <CardContent>
                     <Typography variant="h6" component="div">
-                      {artwork.name}
+                      {artwork.name || 'Unnamed Art'}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      {artwork.description.length > 100
-                        ? `${artwork.description.substring(0, 100)}...`
-                        : artwork.description}
+                      {artwork.description
+                        ? artwork.description.length > 100
+                          ? `${artwork.description.substring(0, 100)}...`
+                          : artwork.description
+                        : 'No description available.'}
                     </Typography>
                     <Typography variant="subtitle2" color="text.primary" sx={{ mt: 1 }}>
                       Votes: {artwork.voteCount}

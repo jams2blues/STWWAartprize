@@ -1,4 +1,4 @@
-// artprize.savetheworldwithart.io/src/contexts/WalletContext.js
+// src/contexts/WalletContext.js
 
 import React, { createContext, useState, useEffect } from 'react';
 import { TezosToolkit } from '@taquito/taquito';
@@ -60,6 +60,7 @@ export const WalletProvider = ({ children }) => {
 
       const address = await wallet.getPKH();
       setWalletAddress(address);
+      console.log('Connected Wallet Address:', address);
     } catch (error) {
       console.error('Wallet connection failed:', error);
       throw error; // Propagate error to be handled in the calling component
@@ -75,6 +76,7 @@ export const WalletProvider = ({ children }) => {
     try {
       await wallet.clearActiveAccount();
       setWalletAddress(null);
+      console.log('Wallet disconnected');
     } catch (error) {
       console.error('Wallet disconnection failed:', error);
       throw error; // Propagate error to be handled in the calling component

@@ -1,7 +1,8 @@
-// artprize.savetheworldwithart.io/api/getTopArtworks.js
+// src/api/getTopArtworks.js
 
 import { createClient } from '@supabase/supabase-js';
 import { TezosToolkit } from '@taquito/taquito';
+import { BeaconWallet } from '@taquito/beacon-wallet';
 
 // Initialize Supabase client with Service Role Key
 const supabase = createClient(
@@ -101,30 +102,80 @@ export default async function handler(req, res) {
 
         try {
           const contract = await Tezos.contract.at(contract_address);
-          const tokenMetadata = await contract.views.get_metadata.tokenId(token_id).read();
+          const storage = await contract.storage();
 
-          // Parse metadata
-          let metadata = {};
-          if (tokenMetadata.artifactUri && tokenMetadata.mimeType) {
-            const dataUriPrefix = `data:${tokenMetadata.mimeType};base64,`;
-            const base64Data = tokenMetadata.artifactUri.replace(dataUriPrefix, '');
-            const image = `data:${tokenMetadata.mimeType};base64,${base64Data}`;
-            metadata = {
-              name: tokenMetadata.name || `Token ${token_id}`,
-              description: tokenMetadata.description || '',
-              image,
-            };
+          // Access the metadata big map
+          const metadataMap = storage.metadata;
+
+          // Retrieve the metadata URI from the big map using the empty string key ''
+          let metadataURI = await metadataMap.get('');
+
+          if (!metadataURI) {
+            throw new Error('Metadata URI not found in contract storage.');
           }
 
-          return {
-            contractAddress: contract_address,
-            tokenId: token_id,
-            voteCount: vote_count,
-            ...metadata,
-            objktLink: tokenDetails.objktLink,
-            twitterHandle: tokenDetails.twitterHandle,
-            twitterUsername: tokenDetails.twitterUsername,
-          };
+          // Decode metadataURI from hex string to UTF-8 string
+          if (typeof metadataURI === 'string') {
+            // Check if it's a hex string
+            if (/^[0-9a-fA-F]+$/.test(metadataURI)) {
+              metadataURI = Buffer.from(metadataURI, 'hex').toString('utf8');
+            }
+            // Else, it's already a UTF-8 string
+          } else if (metadataURI.bytes) {
+            metadataURI = Buffer.from(metadataURI.bytes, 'hex').toString('utf8');
+          } else {
+            throw new Error('Metadata URI has an unexpected type.');
+          }
+
+          // Check if metadataURI starts with 'tezos-storage:'
+          if (metadataURI.startsWith('tezos-storage:')) {
+            const metadataKey = metadataURI.replace('tezos-storage:', '');
+
+            // Retrieve the metadata content from the big map using the key from the URI
+            let metadataContent = await metadataMap.get(metadataKey);
+
+            if (!metadataContent) {
+              throw new Error(`Metadata content not found in contract storage for key '${metadataKey}'.`);
+            }
+
+            // Decode metadataContent from hex string to UTF-8 string
+            if (typeof metadataContent === 'string') {
+              // Check if it's a hex string
+              if (/^[0-9a-fA-F]+$/.test(metadataContent)) {
+                metadataContent = Buffer.from(metadataContent, 'hex').toString('utf8');
+              }
+              // Else, it's already a UTF-8 string
+            } else if (metadataContent.bytes) {
+              metadataContent = Buffer.from(metadataContent.bytes, 'hex').toString('utf8');
+            } else {
+              throw new Error('Metadata content has an unexpected type.');
+            }
+
+            // Parse the JSON metadata
+            const metadata = JSON.parse(metadataContent);
+
+            // Handle artifactUri and imageUri
+            let image = '';
+            if (metadata.artifactUri) {
+              image = metadata.artifactUri; // Already a data URI
+            } else if (metadata.imageUri) {
+              image = metadata.imageUri; // Already a data URI
+            }
+
+            return {
+              contractAddress: contract_address,
+              tokenId: token_id,
+              voteCount: vote_count,
+              name: metadata.name || `Token ${token_id}`,
+              description: metadata.description || 'No description available.',
+              image: image || '',
+              objktLink: tokenDetails.objktLink,
+              twitterHandle: tokenDetails.twitterHandle,
+              twitterUsername: tokenDetails.twitterUsername,
+            };
+          } else {
+            throw new Error('Unsupported metadata URI scheme. Expected "tezos-storage:".');
+          }
         } catch (metadataError) {
           console.error(`Error fetching metadata for token ${contract_address}_${token_id}:`, metadataError);
           return {

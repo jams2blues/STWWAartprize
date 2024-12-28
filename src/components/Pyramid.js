@@ -60,7 +60,7 @@ const Pyramid = ({ artworks, handleVote, isSubmitting, walletAddress }) => {
   };
 
   const twitterLinkStyle = {
-    color: 'darkblue',   // or '#00008b'
+    color: 'red',   // or '#00008b'
     textDecoration: 'underline',
   };
 

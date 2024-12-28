@@ -81,7 +81,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 3A. Pull top 10 from supabase
     const { data, error, status } = await supabase
       .from('votes')
       .select('contract_address, token_id, vote_count')
@@ -96,13 +95,11 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true, data: [] });
     }
 
-    // 3B. For each item in supabase data, fetch token-level metadata
     const artworksWithMetadata = await Promise.all(
       data.map(async (vote) => {
         const { contract_address, token_id, vote_count } = vote;
         const key = `${contract_address}_${token_id}`;
 
-        // 1) Grab fallback info from tokenDetailsMap
         const tokenDetails = tokenDetailsMap[key] || {
           objktLink: `https://objkt.com/tokens/${contract_address}/${token_id}`,
           twitterHandle: '#',
@@ -110,44 +107,31 @@ export default async function handler(req, res) {
         };
 
         try {
-          // 2) Access the contract storage
           const contract = await Tezos.contract.at(contract_address);
           const storage = await contract.storage();
 
-          // 3) The "token_metadata" big_map is in storage.token_metadata
-          //    Each entry: { token_id: number, token_info: Map<string, bytes> }
           if (!storage.token_metadata) {
             throw new Error(`No token_metadata big map found on ${contract_address}`);
           }
           const tokenMetadataBigMap = storage.token_metadata;
 
-          // 4) Retrieve the record for this token_id
           const tokenMetadataPair = await tokenMetadataBigMap.get(token_id);
           if (!tokenMetadataPair) {
             throw new Error(`No entry in token_metadata for token_id ${token_id}`);
           }
 
-          // 5) Destructure the big map entry
-          //    tokenMetadataPair is typically { token_id: X, token_info: Map(...) }
           const { token_info } = tokenMetadataPair;
 
-          // 6) Decode all fields we care about
           const decodedFields = {};
           for (const [rawKey, rawVal] of token_info.entries()) {
-            // rawVal is hex-encoded => convert to utf8
             const utf8Val = Buffer.from(rawVal, 'hex').toString('utf8');
             decodedFields[rawKey] = utf8Val;
           }
 
-          // 7) We want name, description, image, etc.
-          //    According to your notes, some store "artifactUri", some store "imageUri"
-          //    We'll check them both.
           const name = decodedFields.name || `Token ${token_id}`;
           const description = decodedFields.description || 'No description available.';
           const artifactUri = decodedFields.artifactUri || '';
-          const imageUri = decodedFields.imageUri || ''; // if present
-          // If artifactUri is present, we prefer that.
-          // Otherwise fallback to imageUri, etc.
+          const imageUri = decodedFields.imageUri || '';
           const finalImage = artifactUri.length > 0 ? artifactUri : imageUri;
 
           return {
@@ -162,11 +146,7 @@ export default async function handler(req, res) {
             twitterUsername: tokenDetails.twitterUsername,
           };
         } catch (err) {
-          console.error(
-            `Error retrieving metadata from token_metadata big map for ${contract_address}_${token_id}:`,
-            err
-          );
-          // fallback if something fails
+          console.error(`Error retrieving metadata for ${key}:`, err);
           return {
             contractAddress: contract_address,
             tokenId: token_id,

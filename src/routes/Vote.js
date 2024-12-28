@@ -17,6 +17,7 @@ import { useQuery, useMutation, useQueryClient } from 'react-query';
 import InfoIcon from '@mui/icons-material/Info';
 import InfoModal from '../components/InfoModal';
 import Pyramid from '../components/Pyramid';
+import CountdownTimer from '../components/CountdownTimer'; // Importing the CountdownTimer
 
 const Vote = () => {
   const { walletAddress } = useContext(WalletContext);
@@ -103,16 +104,18 @@ const Vote = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      {/* Header */}
       <Typography variant="h4" gutterBottom align="center" sx={{ fontWeight: 'bold', mb: 2 }}>
-        Save The World With Art™ Voting Platform
+        Cast Your Votes!
       </Typography>
+      <Typography variant="h6" gutterBottom align="center" sx={{ fontWeight: 'bold', mb: 2 }}>
+        1st: $600, 2nd: $300, 3rd: $100
+      </Typography>
+      
+      {/* Live Countdown Timer */}
+      <CountdownTimer targetDate="2025-01-07T00:00:00Z" /> {/* Update target date as needed */}
 
-      <Box sx={{ mb: 4, textAlign: 'center' }}>
-        <Typography variant="h6" sx={{ color: 'red' }}>
-          Voting ends on: {new Date('2025-01-03').toLocaleDateString()}
-        </Typography>
-      </Box>
-
+      {/* Information Modal */}
       <Box sx={{ textAlign: 'right', mb: 2 }}>
         <Button onClick={handleOpenModal}>
           <InfoIcon />

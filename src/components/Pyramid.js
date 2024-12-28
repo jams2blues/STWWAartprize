@@ -17,6 +17,20 @@ import {
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import SearchIcon from '@mui/icons-material/Search'; // Magnifying glass
+import { styled } from '@mui/system';
+
+const RankLabel = styled(Typography)(({ theme, rank }) => ({
+  position: 'absolute',
+  top: '-10px',
+  left: '-10px',
+  backgroundColor: '#ffffff',
+  color: '#000000',
+  padding: '2px 6px',
+  borderRadius: '4px',
+  fontSize: '0.75rem',
+  fontWeight: 'bold',
+  boxShadow: '0 0 5px rgba(0,0,0,0.3)',
+}));
 
 const Pyramid = ({ artworks, handleVote, isSubmitting, walletAddress }) => {
   // For "Read more/less" toggles
@@ -66,6 +80,7 @@ const Pyramid = ({ artworks, handleVote, isSubmitting, walletAddress }) => {
     textDecoration: 'underline',
   };
 
+  // Function to determine border style based on rank
   const getBorderStyle = (rank) => {
     switch (rank) {
       case 1:
@@ -79,6 +94,7 @@ const Pyramid = ({ artworks, handleVote, isSubmitting, walletAddress }) => {
     }
   };
 
+  // Function to create pyramid rows
   const getPyramidRows = () => {
     const rows = [];
     if (artworks && artworks.length === 10) {
@@ -88,6 +104,13 @@ const Pyramid = ({ artworks, handleVote, isSubmitting, walletAddress }) => {
       rows.push([artworks[6], artworks[7], artworks[8], artworks[9]]); // 7th, 8th, 9th, 10th
     }
     return rows;
+  };
+
+  // Function to map rank to ordinal (1st, 2nd, etc.)
+  const getOrdinal = (rank) => {
+    const suffixes = ["th", "st", "nd", "rd"];
+    const v = rank % 100;
+    return rank + (suffixes[(v - 20) % 10] || suffixes[v] || suffixes[0]);
   };
 
   return (
@@ -132,6 +155,8 @@ const Pyramid = ({ artworks, handleVote, isSubmitting, walletAddress }) => {
                   ? 4 + index
                   : 7 + index;
 
+              const ordinalRank = getOrdinal(rank);
+
               const uniqueTokenId = `${artwork.contractAddress}_${artwork.tokenId}`;
               const combinedIndex = rowIndex * 10 + index;
               const isExpanded = expandedIndexes[combinedIndex] || false;
@@ -145,10 +170,14 @@ const Pyramid = ({ artworks, handleVote, isSubmitting, walletAddress }) => {
                 : artwork.description.substring(0, shortDescriptionLimit) + '...';
 
               return (
-                <Grid item xs={12} sm={6} md={3} lg={2.4} key={uniqueTokenId}>
+                <Grid item xs={12} sm={6} md={3} lg={2.4} key={uniqueTokenId} sx={{ position: 'relative' }}>
+                  {/* Rank Label */}
+                  <RankLabel rank={rank}>
+                    {ordinalRank}
+                  </RankLabel>
+
                   <Card
                     sx={{
-                      position: 'relative',
                       border: getBorderStyle(rank),
                       transition: 'transform 0.3s',
                       '&:hover': { transform: 'scale(1.05)' },

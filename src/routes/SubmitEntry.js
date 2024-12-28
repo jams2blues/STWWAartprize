@@ -1,6 +1,6 @@
 // src/routes/SubmitEntry.js
 
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   Container,
   Typography,
@@ -8,69 +8,24 @@ import {
   Alert,
   Grid,
   Box,
-  Tooltip, // Imported Tooltip
+  Tooltip,
 } from '@mui/material';
 import WalletConnectButton from '../components/WalletConnectButton';
 import { WalletContext } from '../contexts/WalletContext';
-import ReCAPTCHA from 'react-google-recaptcha';
-import axios from 'axios';
-import dayjs from 'dayjs';
-import duration from 'dayjs/plugin/duration';
 import { Link } from 'react-router-dom';
 import InfoIcon from '@mui/icons-material/Info';
 import InfoModal from '../components/InfoModal';
-
-dayjs.extend(duration);
+import CountdownTimer from '../components/CountdownTimer'; // Importing the CountdownTimer
 
 function SubmitEntry() {
   const { walletAddress } = useContext(WalletContext);
   const [message, setMessage] = useState({ type: '', text: '' });
-  const [captchaValue, setCaptchaValue] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [openModal, setOpenModal] = useState(false);
 
-  // Set the deadline date to next Friday in 2025
-  const deadline = dayjs().add(1, 'week').day(5); // Next Friday
-
-  // Countdown Timer Logic
-  const [timeLeft, setTimeLeft] = useState({ days: '00', hours: '00', minutes: '00', seconds: '00' });
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const now = dayjs();
-      const diff = deadline.diff(now);
-
-      if (diff <= 0) {
-        clearInterval(interval);
-        setTimeLeft({
-          days: '00',
-          hours: '00',
-          minutes: '00',
-          seconds: '00',
-        });
-      } else {
-        const durationObj = dayjs.duration(diff);
-        setTimeLeft({
-          days: String(Math.floor(durationObj.asDays())).padStart(2, '0'),
-          hours: String(durationObj.hours()).padStart(2, '0'),
-          minutes: String(durationObj.minutes()).padStart(2, '0'),
-          seconds: String(durationObj.seconds()).padStart(2, '0'),
-        });
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [deadline]);
-
-  // Handle Form Submission (Disabled as submission phase is complete)
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     // Submission logic is now disabled
     setMessage({ type: 'info', text: 'Submission phase has ended. Please proceed to voting.' });
-  };
-
-  const handleCaptchaChange = (value) => {
-    setCaptchaValue(value);
   };
 
   const handleOpenModal = () => {
@@ -92,12 +47,8 @@ function SubmitEntry() {
         Submission Phase Ended
       </Typography>
 
-      {/* Countdown Timer */}
-      <Box sx={{ mb: 4, textAlign: 'center' }}>
-        <Typography variant="h6" sx={{ color: 'red' }}>
-          Time Left to Vote: {timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s
-        </Typography>
-      </Box>
+      {/* Live Countdown Timer */}
+      <CountdownTimer targetDate="2025-01-07T00:00:00Z" /> {/* Ensure consistency with Vote.js */}
 
       {/* Information Modal */}
       <Box sx={{ textAlign: 'right', mb: 2 }}>
@@ -132,15 +83,6 @@ function SubmitEntry() {
 
       {/* Wallet Connection */}
       <WalletConnectButton />
-
-      {/* ReCAPTCHA */}
-      <Box sx={{ my: 2, textAlign: 'center' }}>
-        <ReCAPTCHA
-          sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}
-          onChange={handleCaptchaChange}
-          theme="light"
-        />
-      </Box>
 
       {/* Submission Form (Disabled) */}
       {walletAddress && (

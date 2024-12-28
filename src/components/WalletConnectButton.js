@@ -33,7 +33,7 @@ const WalletConnectButton = () => {
         </Button>
       ) : (
         <Button variant="contained" color="primary" onClick={handleConnect}>
-          Connect Wallet
+          Connect ꜩ Wallet
         </Button>
       )}
     </>

@@ -21,6 +21,8 @@ export const WalletProvider = ({ children }) => {
         });
 
         console.log('BeaconWallet initialized:', beaconWallet);
+        console.log('BeaconWallet methods:', Object.keys(beaconWallet));
+        console.log('Does getActiveAccount exist?', typeof beaconWallet.client.getActiveAccount);
 
         // Set BeaconWallet as the wallet provider
         const tezosToolkit = new TezosToolkit('https://mainnet.api.tez.ie');
@@ -30,8 +32,8 @@ export const WalletProvider = ({ children }) => {
         // Set the wallet instance in state
         setWallet(beaconWallet);
 
-        // Check for an active account
-        const activeAccount = await beaconWallet.getActiveAccount();
+        // Check for an active account via the client
+        const activeAccount = await beaconWallet.client.getActiveAccount();
         console.log('Active Account:', activeAccount);
 
         if (activeAccount) {

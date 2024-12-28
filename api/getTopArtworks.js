@@ -71,46 +71,43 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Aggregate votes by contract_address and token_id to count total votes per artwork
-    const { data, error, status } = await supabase
+    // Fetch vote counts for all predefined artworks
+    const { data: voteData, error: voteError } = await supabase
       .from('votes')
-      .select('contract_address, token_id, count(*) as total_votes')
-      .group('contract_address, token_id')
-      .order('total_votes', { ascending: false })
-      .limit(10);
+      .select('contract_address, token_id, count')
+      .group('contract_address, token_id');
 
-    if (error && status !== 406) { // 406: No data
-      console.error('Supabase Error:', error);
-      throw error;
+    if (voteError) {
+      console.error('Supabase Vote Error:', voteError);
+      throw voteError;
     }
 
-    if (!data || data.length === 0) {
-      return res.status(200).json({ success: true, data: [] });
-    }
+    // Map vote counts for quick lookup
+    const voteCountMap = {};
+    voteData.forEach((vote) => {
+      const key = `${vote.contract_address}_${vote.token_id}`;
+      voteCountMap[key] = vote.count;
+    });
 
+    // Fetch metadata for predefined artworks
     const artworksWithMetadata = await Promise.all(
-      data.map(async (vote) => {
-        const { contract_address, token_id, total_votes } = vote;
-        const key = `${contract_address}_${token_id}`;
-
-        const tokenDetails = tokenDetailsMap[key] || {
-          objktLink: `https://objkt.com/tokens/${contract_address}/${token_id}`,
-          twitterHandle: '#',
-          twitterUsername: '@unknown',
-        };
+      predefinedArtworks.map(async (artwork) => {
+        const { contractAddress, tokenId, objktLink, twitterHandle, twitterUsername } = artwork;
+        const key = `${contractAddress}_${tokenId}`;
+        const voteCount = voteCountMap[key] || 0;
 
         try {
-          const contract = await Tezos.contract.at(contract_address);
+          const contract = await Tezos.contract.at(contractAddress);
           const storage = await contract.storage();
 
           if (!storage.token_metadata) {
-            throw new Error(`No token_metadata big map found on ${contract_address}`);
+            throw new Error(`No token_metadata big map found on ${contractAddress}`);
           }
           const tokenMetadataBigMap = storage.token_metadata;
 
-          const tokenMetadataPair = await tokenMetadataBigMap.get(token_id);
+          const tokenMetadataPair = await tokenMetadataBigMap.get(tokenId);
           if (!tokenMetadataPair) {
-            throw new Error(`No entry in token_metadata for token_id ${token_id}`);
+            throw new Error(`No entry in token_metadata for token_id ${tokenId}`);
           }
 
           const { token_info } = tokenMetadataPair;
@@ -121,35 +118,35 @@ export default async function handler(req, res) {
             decodedFields[rawKey] = utf8Val;
           }
 
-          const name = decodedFields.name || `Token ${token_id}`;
+          const name = decodedFields.name || `Token ${tokenId}`;
           const description = decodedFields.description || 'No description available.';
           const artifactUri = decodedFields.artifactUri || '';
           const imageUri = decodedFields.imageUri || '';
           const finalImage = artifactUri.length > 0 ? artifactUri : imageUri;
 
           return {
-            contractAddress: contract_address,
-            tokenId: token_id,
-            voteCount: parseInt(total_votes, 10),
+            contractAddress,
+            tokenId,
+            voteCount,
             name,
             description,
             image: finalImage,
-            objktLink: tokenDetails.objktLink,
-            twitterHandle: tokenDetails.twitterHandle,
-            twitterUsername: tokenDetails.twitterUsername,
+            objktLink,
+            twitterHandle,
+            twitterUsername,
           };
         } catch (err) {
           console.error(`Error retrieving metadata for ${key}:`, err);
           return {
-            contractAddress: contract_address,
-            tokenId: token_id,
-            voteCount: parseInt(total_votes, 10),
-            name: `Token ${token_id}`,
+            contractAddress,
+            tokenId,
+            voteCount,
+            name: `Token ${tokenId}`,
             description: 'No description available.',
             image: '',
-            objktLink: tokenDetails.objktLink,
-            twitterHandle: tokenDetails.twitterHandle,
-            twitterUsername: tokenDetails.twitterUsername,
+            objktLink,
+            twitterHandle,
+            twitterUsername,
           };
         }
       })

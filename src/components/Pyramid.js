@@ -1,3 +1,5 @@
+// src/components/Pyramid.js
+
 import React, { useState } from 'react';
 import {
   Grid,
@@ -14,13 +16,19 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import SearchIcon from '@mui/icons-material/Search'; // Magnifying glass
+import SearchIcon from '@mui/icons-material/Search';
+
+/*
+  CHANGES/ADDITIONS:
+  1) Ranks (1st - 10th) in the upper left corner of each card.
+  2) Glow/Pulse effect for top 3 bands (gold, silver, copper).
+  3) Magnifying glass (SearchIcon) top-right corner for fullscreen preview.
+  4) Link colors: OBJKT => cyan, Twitter => red (as requested).
+  5) Maintain aspect ratio with "objectFit: contain".
+*/
 
 const Pyramid = ({ artworks, handleVote, isSubmitting, walletAddress }) => {
-  // For "Read more/less" toggles
   const [expandedIndexes, setExpandedIndexes] = useState({});
-
-  // For the full-screen image preview
   const [previewUrl, setPreviewUrl] = useState('');
   const [openPreview, setOpenPreview] = useState(false);
 
@@ -37,11 +45,10 @@ const Pyramid = ({ artworks, handleVote, isSubmitting, walletAddress }) => {
   };
 
   const handlePreviewClose = () => {
-    setOpenPreview(false);
     setPreviewUrl('');
+    setOpenPreview(false);
   };
 
-  // Titles and descriptions smaller
   const titleStyle = {
     fontSize: '1rem',
     fontWeight: 'bold',
@@ -54,26 +61,88 @@ const Pyramid = ({ artworks, handleVote, isSubmitting, walletAddress }) => {
     lineHeight: 1.4,
   };
 
-  const linkStyle = {
-    color: 'cyan',       // or '#00ffff'
+  // Hyperlink styles
+  const objktLinkStyle = {
+    color: 'cyan',
     textDecoration: 'underline',
   };
-
   const twitterLinkStyle = {
-    color: 'red',   // or '#00008b'
+    color: 'red',
     textDecoration: 'underline',
   };
 
-  const getBorderStyle = (rank) => {
+  // For the top 3 glow effect
+  const glowKeyframes = `
+    @keyframes glow {
+      0% {
+        box-shadow: 0 0 5px #fff, 0 0 10px #fff;
+      }
+      50% {
+        box-shadow: 0 0 15px #fff, 0 0 30px #fff;
+      }
+      100% {
+        box-shadow: 0 0 5px #fff, 0 0 10px #fff;
+      }
+    }
+  `;
+
+  // Insert the keyframe style in the DOM if not existing
+  if (typeof document !== 'undefined' && !document.getElementById('glowKeyframes')) {
+    const style = document.createElement('style');
+    style.id = 'glowKeyframes';
+    style.innerHTML = glowKeyframes;
+    document.head.appendChild(style);
+  }
+
+  const getCardStyle = (rank) => {
     switch (rank) {
       case 1:
-        return '5px solid gold';
+        return {
+          border: '5px solid gold',
+          animation: 'glow 2s infinite',
+        };
       case 2:
-        return '5px solid silver';
+        return {
+          border: '5px solid silver',
+          animation: 'glow 2s infinite',
+        };
       case 3:
-        return '5px solid #cd7f32'; // Copper
+        return {
+          border: '5px solid #cd7f32', // copper
+          animation: 'glow 2s infinite',
+        };
       default:
-        return '3px double blue';
+        return {
+          border: '3px double blue',
+        };
+    }
+  };
+
+  // Provide the tiny rank labels
+  const getRankLabel = (rank) => {
+    switch (rank) {
+      case 1:
+        return '1st';
+      case 2:
+        return '2nd';
+      case 3:
+        return '3rd';
+      case 4:
+        return '4th';
+      case 5:
+        return '5th';
+      case 6:
+        return '6th';
+      case 7:
+        return '7th';
+      case 8:
+        return '8th';
+      case 9:
+        return '9th';
+      case 10:
+        return '10th';
+      default:
+        return '';
     }
   };
 
@@ -91,8 +160,17 @@ const Pyramid = ({ artworks, handleVote, isSubmitting, walletAddress }) => {
   return (
     <>
       {/* Full-Screen Image Dialog */}
-      <Dialog open={openPreview} onClose={handlePreviewClose} maxWidth="xl">
-        <DialogContent sx={{ p: 0, backgroundColor: '#000', textAlign: 'center' }}>
+      <Dialog
+        open={openPreview}
+        onClose={handlePreviewClose}
+        maxWidth="xl"
+        PaperProps={{
+          sx: {
+            backgroundColor: '#000',
+          },
+        }}
+      >
+        <DialogContent sx={{ p: 0, textAlign: 'center' }}>
           {previewUrl && (
             <Box
               component="img"
@@ -101,7 +179,7 @@ const Pyramid = ({ artworks, handleVote, isSubmitting, walletAddress }) => {
               sx={{
                 width: '100%',
                 height: 'auto',
-                maxHeight: '90vh',
+                maxHeight: '95vh',
                 objectFit: 'contain',
               }}
             />
@@ -134,7 +212,10 @@ const Pyramid = ({ artworks, handleVote, isSubmitting, walletAddress }) => {
               const combinedIndex = rowIndex * 10 + index;
               const isExpanded = expandedIndexes[combinedIndex] || false;
 
-              // For a short/long description
+              // rank label text
+              const rankLabel = getRankLabel(rank);
+
+              // short vs. long description
               const shortDescriptionLimit = 150;
               const hasLongDesc =
                 artwork.description && artwork.description.length > shortDescriptionLimit;
@@ -147,14 +228,31 @@ const Pyramid = ({ artworks, handleVote, isSubmitting, walletAddress }) => {
                   <Card
                     sx={{
                       position: 'relative',
-                      border: getBorderStyle(rank),
+                      ...getCardStyle(rank), // top 3 glow
                       transition: 'transform 0.3s',
                       '&:hover': { transform: 'scale(1.05)' },
                     }}
                   >
+                    {/* Tiny rank label in top-left corner */}
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        top: 8,
+                        left: 8,
+                        zIndex: 2,
+                        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                        color: '#fff',
+                        padding: '2px 5px',
+                        borderRadius: '4px',
+                        fontSize: '0.75rem',
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      {rankLabel}
+                    </Box>
+
                     {artwork.image ? (
                       <Box sx={{ position: 'relative' }}>
-                        {/* Magnifying Glass in top-right corner */}
                         <IconButton
                           size="small"
                           onClick={() => handlePreviewOpen(artwork.image)}
@@ -162,7 +260,7 @@ const Pyramid = ({ artworks, handleVote, isSubmitting, walletAddress }) => {
                             position: 'absolute',
                             top: 8,
                             right: 8,
-                            zIndex: 2,
+                            zIndex: 3,
                             color: '#fff',
                             backgroundColor: 'rgba(0,0,0,0.5)',
                             '&:hover': {
@@ -180,7 +278,7 @@ const Pyramid = ({ artworks, handleVote, isSubmitting, walletAddress }) => {
                           sx={{
                             width: '100%',
                             height: 'auto',
-                            objectFit: 'contain', // preserve aspect ratio
+                            objectFit: 'contain',
                           }}
                         />
                       </Box>
@@ -214,7 +312,12 @@ const Pyramid = ({ artworks, handleVote, isSubmitting, walletAddress }) => {
                         <Box sx={{ mt: 1 }}>
                           <IconButton
                             size="small"
-                            onClick={() => toggleExpand(combinedIndex)}
+                            onClick={() => {
+                              setExpandedIndexes((prev) => ({
+                                ...prev,
+                                [combinedIndex]: !prev[combinedIndex],
+                              }));
+                            }}
                             aria-label="toggle description"
                             sx={{ color: '#aaa' }}
                           >
@@ -239,7 +342,7 @@ const Pyramid = ({ artworks, handleVote, isSubmitting, walletAddress }) => {
                           href={artwork.objktLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          style={linkStyle}
+                          style={objktLinkStyle}
                         >
                           View on Objkt.com
                         </a>

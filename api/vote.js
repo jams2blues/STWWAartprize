@@ -1,4 +1,4 @@
-// artprize.savetheworldwithart.io/api/vote.js
+// File: artprize.savetheworldwithart.io/api/vote.js
 
 import { createClient } from '@supabase/supabase-js';
 import axios from 'axios';
@@ -69,13 +69,12 @@ export default async function handler(req, res) {
       .single();
 
     if (selectError && selectError.code !== 'PGRST116') { // 'PGRST116' = No rows found
+      console.error('Supabase Select Error:', selectError);
       throw selectError;
     }
 
     if (existingVote) {
-      // User has already voted for this artwork; allow them to change their vote to another artwork
-      // To change their vote, we can delete the existing vote and insert a new one
-      // Alternatively, implement a separate logic if needed
+      // User has already voted for this artwork
       return res.status(200).json({ success: true, message: 'You have already voted for this artwork.' });
     } else {
       // First time voting for this artwork; insert a new vote
@@ -84,6 +83,7 @@ export default async function handler(req, res) {
         .insert([{ wallet_address: walletAddress, contract_address: contractAddress, token_id: tokenId }]);
 
       if (error) {
+        console.error('Supabase Insert Error:', error);
         throw error;
       }
 

@@ -1,15 +1,12 @@
-// src/api/getTopArtworks.js
+// artprize.savetheworldwithart.io/api/getTopArtworks.js
 
 import { createClient } from '@supabase/supabase-js';
 import { TezosToolkit } from '@taquito/taquito';
 
-// ----------------------------------
-// 1. Initialize Supabase & Taquito
-// ----------------------------------
-
+// Initialize Supabase & Taquito
 const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.REACT_APP_SUPABASE_URL,
+  process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY
 );
 
 const Tezos = new TezosToolkit('https://mainnet.api.tez.ie');
@@ -70,10 +67,6 @@ const tokenDetailsMap = {
     twitterUsername: '@My_3y3',
   },
 };
-
-// --------------------------------------------
-// 3. The Handler for GET /api/getTopArtworks
-// --------------------------------------------
 
 // Handler for GET /api/getTopArtworks
 export default async function handler(req, res) {

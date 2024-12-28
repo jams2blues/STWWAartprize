@@ -4,8 +4,8 @@ import { createClient } from '@supabase/supabase-js';
 import axios from 'axios';
 
 const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.REACT_APP_SUPABASE_URL,
+  process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY
 );
 
 export default async function handler(req, res) {

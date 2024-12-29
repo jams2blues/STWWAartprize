@@ -14,28 +14,24 @@ export const WalletProvider = ({ children }) => {
   useEffect(() => {
     const initWallet = async () => {
       try {
-        // Initialize BeaconWallet
+        // Example advanced config: ensure you have the latest version of @taquito/beacon-wallet installed
         const beaconWallet = new BeaconWallet({
           name: 'Save The World With Art™ Art Prize',
-          preferredNetwork: 'mainnet', // Ensure this matches your desired network
+          preferredNetwork: 'mainnet',
+          // Note: If you are using WalletConnect V2, you must provide a projectId.
+          // Replace YOUR_WC_PROJECT_ID with a valid project ID from your WalletConnect account
+          walletConnectOptions: {
+            projectId: 'YOUR_WC_PROJECT_ID', 
+            relayUrl: 'wss://relay.walletconnect.com',
+          },
         });
 
-        console.log('BeaconWallet initialized:', beaconWallet);
-        console.log('BeaconWallet methods:', Object.keys(beaconWallet));
-        console.log('Does getActiveAccount exist?', typeof beaconWallet.client.getActiveAccount);
-
-        // Set BeaconWallet as the wallet provider
         const tezosToolkit = new TezosToolkit('https://mainnet.api.tez.ie');
         tezosToolkit.setWalletProvider(beaconWallet);
         setTezos(tezosToolkit);
-
-        // Set the wallet instance in state
         setWallet(beaconWallet);
 
-        // Check for an active account via the client
         const activeAccount = await beaconWallet.client.getActiveAccount();
-        console.log('Active Account:', activeAccount);
-
         if (activeAccount) {
           setWalletAddress(activeAccount.address);
         }
@@ -52,20 +48,16 @@ export const WalletProvider = ({ children }) => {
       console.error('Wallet not initialized');
       return;
     }
-
     try {
       await wallet.requestPermissions({
-        network: {
-          type: 'mainnet', // Ensure this matches your desired network
-        },
+        network: { type: 'mainnet' },
       });
-
       const address = await wallet.getPKH();
       setWalletAddress(address);
       console.log('Connected Wallet Address:', address);
     } catch (error) {
       console.error('Wallet connection failed:', error);
-      throw error; // Propagate error to be handled in the calling component
+      throw error;
     }
   };
 
@@ -74,14 +66,13 @@ export const WalletProvider = ({ children }) => {
       console.error('Wallet not initialized');
       return;
     }
-
     try {
       await wallet.clearActiveAccount();
       setWalletAddress(null);
       console.log('Wallet disconnected');
     } catch (error) {
       console.error('Wallet disconnection failed:', error);
-      throw error; // Propagate error to be handled in the calling component
+      throw error;
     }
   };
 

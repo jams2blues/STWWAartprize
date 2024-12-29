@@ -4,7 +4,9 @@
     {
       "src": "package.json",
       "use": "@vercel/static-build",
-      "config": { "distDir": "build" }
+      "config": {
+        "distDir": "build"
+      }
     },
     {
       "src": "api/**/*.js",
@@ -27,7 +29,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; frame-src 'self' https://www.google.com https://www.gstatic.com https://www.recaptcha.net https://vercel.live; script-src 'self' https://www.google.com https://www.gstatic.com https://www.recaptcha.net https://vercel.live; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://mainnet.api.tez.ie wss://relay.walletconnect.org wss://relay.walletconnect.com;"
+          "value": "default-src 'self'; frame-src 'self' https://www.google.com https://www.gstatic.com https://www.recaptcha.net https://vercel.live https://verify.walletconnect.org; script-src 'self' https://www.google.com https://www.gstatic.com https://www.recaptcha.net https://vercel.live; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://mainnet.api.tez.ie wss://relay.walletconnect.org wss://relay.walletconnect.com https://beacon-node-1.beacon-server-1.papers.tech;"
         }
       ]
     }

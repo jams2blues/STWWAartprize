@@ -14,27 +14,18 @@ export const WalletProvider = ({ children }) => {
   useEffect(() => {
     const initWallet = async () => {
       try {
-        // Ensure you're using the latest @taquito/beacon-wallet
-        // Provide a valid WalletConnect V2 projectId below if you have one
+        // Minimal config: no custom walletConnectOptions
         const beaconWallet = new BeaconWallet({
-          name: 'Save The World With Art™ Art Prize',
+          name: 'Save The World With Art Art Prize',
           preferredNetwork: 'mainnet',
-          walletConnectOptions: {
-            // If you have your own projectId from https://cloud.walletconnect.com, set it here
-            projectId: 'YOUR_WALLETCONNECT_PROJECT_ID',
-            relayUrl: 'wss://relay.walletconnect.com'
-          }
         });
 
-        // Set up Tezos toolkit with your mainnet RPC
         const tezosToolkit = new TezosToolkit('https://mainnet.api.tez.ie');
         tezosToolkit.setWalletProvider(beaconWallet);
         setTezos(tezosToolkit);
 
-        // Store wallet instance
         setWallet(beaconWallet);
 
-        // Check if we already have an active account
         const activeAccount = await beaconWallet.client.getActiveAccount();
         if (activeAccount) {
           setWalletAddress(activeAccount.address);
@@ -54,7 +45,7 @@ export const WalletProvider = ({ children }) => {
     }
     try {
       await wallet.requestPermissions({
-        network: { type: 'mainnet' }
+        network: { type: 'mainnet' },
       });
       const address = await wallet.getPKH();
       setWalletAddress(address);
@@ -86,7 +77,7 @@ export const WalletProvider = ({ children }) => {
         walletAddress,
         Tezos,
         connectWallet,
-        disconnectWallet
+        disconnectWallet,
       }}
     >
       {children}

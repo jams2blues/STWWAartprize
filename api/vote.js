@@ -52,20 +52,20 @@ export default async function handler(req, res) {
       'KT1A1r5J3NKVyhSBm2S7PPaG3Y1NtgAoUTho_30': true,
       'KT1VcZmxPrkiWe54vyZYnK9ggzxG5DJu7zgT_2': true,
     };
-
     const uniqueTokenId = `${contractAddress}_${tokenId}`;
-
     if (!allowedArtworks[uniqueTokenId]) {
       return res.status(400).json({ success: false, message: 'Invalid artwork selected.' });
     }
 
-    // Check if the user has already voted for this artwork
+    // ---------------------------------------------
+    //  NEW LOGIC: Only one vote per wallet overall
+    // ---------------------------------------------
+    // Check if this wallet already has any existing vote (for any token).
+    // If yes, let them change that vote to the new token.
     const { data: existingVote, error: selectError } = await supabase
       .from('votes')
       .select('*')
       .eq('wallet_address', walletAddress)
-      .eq('contract_address', contractAddress)
-      .eq('token_id', tokenId)
       .single();
 
     if (selectError && selectError.code !== 'PGRST116') { // 'PGRST116' = No rows found
@@ -73,21 +73,59 @@ export default async function handler(req, res) {
       throw selectError;
     }
 
+    // If user has an existing vote
     if (existingVote) {
-      // User has already voted for this artwork
-      return res.status(200).json({ success: true, message: 'You have already voted for this artwork.' });
-    } else {
-      // First time voting for this artwork; insert a new vote
-      const { data, error } = await supabase
-        .from('votes')
-        .insert([{ wallet_address: walletAddress, contract_address: contractAddress, token_id: tokenId }]);
+      // Check if they're voting for the same token again
+      if (
+        existingVote.contract_address === contractAddress &&
+        existingVote.token_id === tokenId
+      ) {
+        // No change
+        return res.status(200).json({ success: true, message: 'You have already voted for this artwork.' });
+      } else {
+        // User is changing their vote to a new token
+        const { data: updatedVote, error: updateError } = await supabase
+          .from('votes')
+          .update({
+            contract_address: contractAddress,
+            token_id: tokenId
+          })
+          .eq('wallet_address', walletAddress)
+          .single();
 
-      if (error) {
-        console.error('Supabase Insert Error:', error);
-        throw error;
+        if (updateError) {
+          console.error('Supabase Update Error:', updateError);
+          throw updateError;
+        }
+
+        return res.status(200).json({
+          success: true,
+          message: 'Your vote has been updated successfully.',
+          data: updatedVote
+        });
+      }
+    } else {
+      // -------------------------------
+      //  FIRST-TIME VOTER
+      // -------------------------------
+      const { data: insertData, error: insertError } = await supabase
+        .from('votes')
+        .insert([{
+          wallet_address: walletAddress,
+          contract_address: contractAddress,
+          token_id: tokenId
+        }]);
+
+      if (insertError) {
+        console.error('Supabase Insert Error:', insertError);
+        throw insertError;
       }
 
-      return res.status(200).json({ success: true, message: 'Vote recorded successfully.', data });
+      return res.status(200).json({
+        success: true,
+        message: 'Vote recorded successfully.',
+        data: insertData
+      });
     }
   } catch (error) {
     console.error('Error processing vote:', error);

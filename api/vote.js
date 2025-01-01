@@ -30,8 +30,16 @@ export default async function handler(req, res) {
     return res.status(400).json({ success: false, message: 'Voting period has ended.' });
   }
 
+  // 1) Parse IP & User Agent
+  // In Vercel/Next, 'x-forwarded-for' is often the best chance to get the real client IP
+  const ipAddress =
+    req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+    req.socket?.remoteAddress ||
+    '';
+  const userAgent = req.headers['user-agent'] || '';
+
   try {
-    // Verify reCAPTCHA
+    // 2) Verify reCAPTCHA
     const verifyUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${captchaToken}`;
     const captchaResponse = await axios.post(verifyUrl);
 
@@ -39,7 +47,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ success: false, message: 'reCAPTCHA verification failed.' });
     }
 
-    // Validate the Artwork (Ensure only predefined artworks can be voted on)
+    // 3) Validate Artwork
     const allowedArtworks = {
       'KT1Tj26yEQwFAKnpHCF6pWasz5qeYbVWC1iP_0': true,
       'KT1DCRK2mkTdY25FkyMFjAiXkEFMQ8XWCBDr_0': true,
@@ -57,38 +65,39 @@ export default async function handler(req, res) {
       return res.status(400).json({ success: false, message: 'Invalid artwork selected.' });
     }
 
-    // ---------------------------------------------
-    //  NEW LOGIC: Only one vote per wallet overall
-    // ---------------------------------------------
-    // Check if this wallet already has any existing vote (for any token).
-    // If yes, let them change that vote to the new token.
+    // 4) Check Existing Vote
     const { data: existingVote, error: selectError } = await supabase
       .from('votes')
       .select('*')
       .eq('wallet_address', walletAddress)
       .single();
 
-    if (selectError && selectError.code !== 'PGRST116') { // 'PGRST116' = No rows found
+    if (selectError && selectError.code !== 'PGRST116') { 
+      // PGRST116 = no rows found
       console.error('Supabase Select Error:', selectError);
       throw selectError;
     }
 
-    // If user has an existing vote
     if (existingVote) {
-      // Check if they're voting for the same token again
+      // 4A) If same vote, do nothing
       if (
         existingVote.contract_address === contractAddress &&
         existingVote.token_id === tokenId
       ) {
-        // No change
-        return res.status(200).json({ success: true, message: 'You have already voted for this artwork.' });
+        return res.status(200).json({
+          success: true,
+          message: 'You have already voted for this artwork.',
+        });
       } else {
-        // User is changing their vote to a new token
+        // 4B) User is changing vote
         const { data: updatedVote, error: updateError } = await supabase
           .from('votes')
           .update({
             contract_address: contractAddress,
-            token_id: tokenId
+            token_id: tokenId,
+            ip_address: ipAddress,      // Store IP
+            user_agent: userAgent,      // Store user-agent
+            updated_at: new Date(),     // Keep track
           })
           .eq('wallet_address', walletAddress)
           .single();
@@ -101,20 +110,22 @@ export default async function handler(req, res) {
         return res.status(200).json({
           success: true,
           message: 'Your vote has been updated successfully.',
-          data: updatedVote
+          data: updatedVote,
         });
       }
     } else {
-      // -------------------------------
-      //  FIRST-TIME VOTER
-      // -------------------------------
+      // 5) First-time voter
       const { data: insertData, error: insertError } = await supabase
         .from('votes')
-        .insert([{
-          wallet_address: walletAddress,
-          contract_address: contractAddress,
-          token_id: tokenId
-        }]);
+        .insert([
+          {
+            wallet_address: walletAddress,
+            contract_address: contractAddress,
+            token_id: tokenId,
+            ip_address: ipAddress,  // Store IP
+            user_agent: userAgent,  // Store user-agent
+          },
+        ]);
 
       if (insertError) {
         console.error('Supabase Insert Error:', insertError);
@@ -124,7 +135,7 @@ export default async function handler(req, res) {
       return res.status(200).json({
         success: true,
         message: 'Vote recorded successfully.',
-        data: insertData
+        data: insertData,
       });
     }
   } catch (error) {
